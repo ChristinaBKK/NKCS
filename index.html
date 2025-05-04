@@ -948,20 +948,23 @@ function getVisibleRowsData() {
     return data;
 }
   
-        function getExportFilename(extension) {
-            var text = document.getElementById('studentNameDisplay').textContent;
-            if (text) {
-                var parts = text.split("for ");
-                if (parts.length > 1) {
-                    var nameAndId = parts[1].split(" (ID: ");
-                    var name = nameAndId[0];
-                    var id = nameAndId[1].replace(")", "");
-                    var sanitizedName = name.replace(/\s+/g, '_');
-                    return `revision_sessions_${sanitizedName}_${id}.${extension}`;
-                }
-            }
-            return `all_revision_sessions.${extension}`;
-        }
+function getExportFilename(extension) {
+  var text = document.getElementById('studentNameDisplay').textContent;
+  if (text) {
+    var parts = text.split("for ");
+    if (parts.length > 1) {
+      var nameAndId = parts[1].split(" (ID: ");
+      if (nameAndId.length > 1) {
+        var name = nameAndId[0];
+        var id = nameAndId[1].split(')')[0];
+        var sanitizedName = name.replace(/\s+/g, '_');
+        sanitizedName = sanitizedName.split('.')[0];
+        return `revision_sessions_${sanitizedName}_${id}.${extension}`;
+      }
+    }
+  }
+  return `all_revision_sessions.${extension}`;
+}
 
 function exportToPDF() {
     const { jsPDF } = window.jspdf;
