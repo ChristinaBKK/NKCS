@@ -819,8 +819,25 @@
   	// When the page loads, set the initial content
 	document.addEventListener('DOMContentLoaded', () => {
     	const studentNameDisplay = document.getElementById('studentNameDisplay');
-    	studentNameDisplay.innerHTML = '<strong>Rooms for Self Study</strong><br><div style="padding-left: 20px;"><strong>Grade 10</strong><div style="padding-left: 20px;"<br>B3010 -> 10G + 10F1<br>B3011 -> 10C + 10F2<br>B3039 -> 10A1<br>B3040 -> 10A2<br>B3041 -> 10E + 10D<br>B3043 -> 10B<br> </div><div><strong>Grade 11 & 12</strong><br> <div style="padding-left: 20px;">Library';
-
+    	studentNameDisplay.innerHTML = `
+  <strong>Rooms for Self Study</strong><br>
+  <div style="padding-left: 20px;">
+    <strong>Grade 10</strong>
+    <div style="padding-left: 20px;">
+      B3010 -> 10G + 10F1<br>
+      B3011 -> 10C + 10F2<br>
+      B3039 -> 10A1<br>
+      B3040 -> 10A2<br>
+      B3041 -> 10E + 10D<br>
+      B3043 -> 10B<br>
+    </div>
+  </div>
+  <div>
+    <div style="padding-left: 20px;">
+    <strong>Grade 11 & 12</strong><br>
+    <div style="padding-left: 20px;">Library</div>
+  </div>
+`;
    		 // Later, when student data is available, replace it
     	 // Example:
     	 // studentNameDisplay.innerHTML = `Revision Sessions for ${studentName} (ID: ${id}).<br>When you don't have revision sessions, you will <strong>${selfStudy}</strong>.`;
@@ -855,7 +872,7 @@
         var studentName = student.name;
       	var selfStudy = student.selfStudy; // Always present
       console.log("Student name:", studentName, "Exam codes:", examCodes);
-        studentNameDisplay.innerHTML = `Revision Sessions for ${studentName} (ID: ${id}). <br><br>When you don't have revision sessions, you will <strong>${selfStudy}<\strong>.<br>`;
+        studentNameDisplay.innerHTML = `Revision Sessions for ${studentName} (ID: ${id}). <br><br>When you don't have revision sessions, you will <strong>${selfStudy}</strong>.<br>`;
 
         rows.forEach(function(row) {
             var examCode = row.cells[3].textContent.trim(); // Exam Code in fourth column (index 3)
@@ -871,8 +888,24 @@
     // Show All Function
     function showAll(clearInput = false) {
         document.getElementById('studentNameDisplay').textContent = ''; // Clear student name display
-      	studentNameDisplay.innerHTML = '<strong>Rooms for Self Study</strong><br><div style="padding-left: 20px;"><strong>Grade 10</strong><div style="padding-left: 20px;"<br>B3010 -> 10G + 10F1<br>B3011 -> 10C + 10F2<br>B3039 -> 10A1<br>B3040 -> 10A2<br>B3041 -> 10E + 10D<br>B3043 -> 10B<br> </div><div><strong>Grade 11 & 12</strong><br> <div style="padding-left: 20px;">Library';
-        if (clearInput) {
+   		studentNameDisplay.innerHTML = `
+  <strong>Rooms for Self Study</strong><br>
+  <div style="padding-left: 20px;">
+    <strong>Grade 10</strong>
+    <div style="padding-left: 20px;">
+      B3010 -> 10G + 10F1<br>
+      B3011 -> 10C + 10F2<br>
+      B3039 -> 10A1<br>
+      B3040 -> 10A2<br>
+      B3041 -> 10E + 10D<br>
+      B3043 -> 10B<br>
+    </div>
+  </div>
+  <div>
+    <strong>Grade 11 & 12</strong><br>
+    <div style="padding-left: 20px;">Library</div>
+  </div>
+`;
         	var studentIDInput = document.getElementById('studentID');
             studentIDInput.value = '';
       	var rows = document.querySelectorAll('#revisionTable tbody tr');
@@ -1032,6 +1065,4 @@ function exportToPDF() {
     }
 });
 </script>
-        
-
 </div></div></body></html>
