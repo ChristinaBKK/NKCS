@@ -410,12 +410,16 @@
             });
             status.textContent=message;
         }
+        function closeDetails() {
+            courses.forEach(course=>course.classList.remove("selected"));
+            drawer.classList.remove("open"); drawer.setAttribute("aria-hidden","true"); drawer.setAttribute("inert","");
+        }
         function resetChart() {
             document.querySelectorAll(".filter").forEach(button=>button.classList.toggle("active",button.dataset.filter==="all"));
             courses.forEach(course => course.classList.remove("dimmed","selected"));
             svg.querySelectorAll(".edge").forEach(edge => { edge.classList.remove("dimmed","highlighted"); edge.setAttribute("marker-end","url(#arrow)"); });
             status.textContent="Showing all pathways. Select a course to trace its connections.";
-            drawer.classList.remove("open"); drawer.setAttribute("aria-hidden","true"); drawer.setAttribute("inert","");
+            closeDetails();
         }
         function traceRoute(startId) {
             const found=new Set([startId]);
@@ -446,7 +450,7 @@
         }
         document.querySelectorAll(".filter").forEach(button => button.addEventListener("click",() => {
             document.querySelectorAll(".filter").forEach(item=>item.classList.toggle("active",item===button));
-            courses.forEach(course=>course.classList.remove("selected")); drawer.classList.remove("open");
+            closeDetails();
             if(button.dataset.filter==="all") { resetChart(); return; }
             applyHighlight(routes[button.dataset.filter],`Showing the ${button.textContent.trim()} pathway. Dashed connections indicate optional enrollment requiring a placement test.`);
         }));
@@ -456,6 +460,9 @@
             applyHighlight(activeIds,course.dataset.track==="further"?"Showing Regular + Further Maths, a combined pathway starting in Grade 11.":`Tracing the routes into and out of ${course.querySelector(".course-title").textContent}.`); showDetails(course);
         }));
         document.getElementById("drawer-close").addEventListener("click",resetChart);
+        document.addEventListener("click",event => {
+            if(drawer.classList.contains("open")&&!event.target.closest("#drawer,.course")) closeDetails();
+        });
         document.getElementById("print-chart").addEventListener("click",()=>window.print());
         window.addEventListener("resize",drawConnections); window.addEventListener("load",drawConnections); drawConnections();
     </script>
