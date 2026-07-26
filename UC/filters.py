@@ -1,12 +1,13 @@
 """
-侧边栏筛选器（中英双语 + 角色预设）
+侧边栏筛选器
 """
 from datetime import datetime, timedelta
 
 import streamlit as st
 
-from data import get_filter_options
+from data import fetch_cases, get_filter_options
 from i18n import Lang, t
+from translations import translate_school, translate_curriculum, translate_country, translate_purpose, translate_university
 
 
 ROLE_PRESETS = {
@@ -53,35 +54,40 @@ def render_sidebar(lang: Lang) -> dict:
         default_purpose = role_cfg.get("purpose", [])
         default_country = []
 
-        # 各个 filter
+        # 各个 filter（option 显示英文标签，但 value 保留中文用于查询）
         school_sel = st.multiselect(
             t("filter_school", lang),
             options=options["school"],
             default=default_school,
+            format_func=lambda x: translate_school(x, lang) if lang == "en" else x,
             key="filter_school",
         )
         curriculum_sel = st.multiselect(
             t("filter_curriculum", lang),
             options=options["curriculum"],
             default=default_curriculum,
+            format_func=lambda x: translate_curriculum(x, lang) if lang == "en" else x,
             key="filter_curriculum",
         )
         country_sel = st.multiselect(
             t("filter_country", lang),
             options=options["country"],
             default=default_country,
+            format_func=lambda x: translate_country(x, lang) if lang == "en" else x,
             key="filter_country",
         )
         admit_sel = st.multiselect(
             t("filter_admit_school", lang),
             options=options["admit_school"],
             default=[],
+            format_func=lambda x: translate_university(x, lang) if lang == "en" else x,
             key="filter_admit_school",
         )
         purpose_sel = st.multiselect(
             t("filter_purpose", lang),
             options=options["purpose"],
             default=default_purpose,
+            format_func=lambda x: translate_purpose(x, lang) if lang == "en" else x,
             key="filter_purpose",
         )
         is_arts = st.checkbox(t("filter_is_arts", lang), value=False, key="filter_arts")

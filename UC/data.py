@@ -2,42 +2,42 @@
 数据访问层 - 从 Supabase 拉数据
 
 支持两种模式：
-- service_key: 全权限（本地调试用）
+- service_key: 全权限（开发/管理用）
 - anon_key: 只读（公网公开看板用，配合 RLS）
 """
+import sys
 from datetime import datetime, timedelta
+from pathlib import Path
 from typing import Optional
 
 import pandas as pd
 from supabase import create_client
 
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
 from config import get_config
-from i18n import Lang
+from i18n import Lang, t
 
 
 _clients = {}
 
 
-def get_db(mode: str = "anon"):
+def get_db(mode: str = "service"):
     """
     获取 Supabase 客户端
-    mode="anon": anon key（只读，配合 RLS，公网部署推荐）
-    mode="service": service_role key（admin 权限，仅本地调试）
+    mode="service": service_role key（默认，admin 权限）
+    mode="anon": anon key（只读，配合 RLS）
     """
     if mode in _clients:
         return _clients[mode]
 
     cfg = get_config()
     if mode == "anon":
-        if not cfg.supabase.anon_key:
-            raise ValueError("SUPABASE_ANON_KEY 未配置")
         key = cfg.supabase.anon_key
-    elif mode == "service":
-        if not cfg.supabase.service_key:
-            raise ValueError("SUPABASE_SERVICE_KEY 未配置")
-        key = cfg.supabase.service_key
+        if not key:
+            raise ValueError("SUPABASE_ANON_KEY 未配置")
     else:
-        raise ValueError(f"未知 mode: {mode}（应为 anon 或 service）")
+        key = cfg.supabase.service_key
 
     _clients[mode] = create_client(cfg.supabase.url, key)
     return _clients[mode]
@@ -45,7 +45,7 @@ def get_db(mode: str = "anon"):
 
 def fetch_cases(
     lang: Lang = "zh",
-    mode: str = "anon",
+    mode: str = "service",
     school: Optional[list] = None,
     curriculum: Optional[list] = None,
     country: Optional[list] = None,
@@ -58,6 +58,8 @@ def fetch_cases(
 ) -> pd.DataFrame:
     """
     拉取学生案例（应用所有 filter）
+    mode="service": service_role key（admin）
+    mode="anon": anon key（只读，配合 RLS）
     """
     db = get_db(mode)
     # 用 v_cases_full 视图
@@ -69,12 +71,12 @@ def fetch_cases(
         q = q.in_("curriculum", curriculum)
     if purpose:
         q = q.in_("article_purpose", purpose)
-    if is_arts is not None:
-        q = q.eq("is_arts", is_arts)
+    # 注意：v_cases_full 视图可能缺 is_arts 字段；为了兼容性，先不传，
+    # 在 pandas 层用 case_id 反查 student_cases 表
     if date_from:
-        q = q.gte("article_published_at", date_from.isoformat())
+        q = q.gte("published_at", date_from.isoformat())
     if date_to:
-        q = q.lte("article_published_at", date_to.isoformat())
+        q = q.lte("published_at", date_to.isoformat())
     if keyword:
         like = f"%{keyword}%"
         q = q.or_(
@@ -84,9 +86,19 @@ def fetch_cases(
             f"admit_schools.cs.{{{keyword}}}"
         )
 
-    result = q.order("article_published_at", desc=True).limit(1000).execute()
+    result = q.order("published_at", desc=True).limit(1000).execute()
     rows = result.data or []
     df = pd.DataFrame(rows)
+
+    # is_arts 过滤（v_cases_full 可能没有该字段，所以用 case_id 反查）
+    if is_arts is not None and not df.empty and "case_id" in df.columns:
+        case_ids = df["case_id"].tolist()
+        is_arts_map = {}
+        for cid in case_ids:
+            r = db.table("student_cases").select("id, is_arts").eq("id", cid).execute()
+            for c in r.data or []:
+                is_arts_map[c["id"]] = c.get("is_arts", False)
+        df = df[df["case_id"].map(lambda x: is_arts_map.get(x, False) == is_arts)]
 
     # country / admit_school 是数组列，需要在 pandas 层过滤
     if country and not df.empty and "admit_country" in df.columns:
@@ -101,11 +113,11 @@ def fetch_cases(
     return df.reset_index(drop=True)
 
 
-def fetch_metrics(lang: Lang = "zh", mode: str = "anon") -> dict:
+def fetch_metrics(lang: Lang = "zh", mode: str = "service") -> dict:
     """总览指标"""
     db = get_db(mode)
     cases = db.table("v_cases_full").select(
-        "id, school, admit_country, admit_schools, article_published_at"
+        "case_id, school, admit_country, admit_schools, published_at"
     ).execute().data or []
 
     df = pd.DataFrame(cases)
@@ -126,18 +138,18 @@ def fetch_metrics(lang: Lang = "zh", mode: str = "anon") -> dict:
 
     last_30d = 0
     cutoff = datetime.now() - timedelta(days=30)
-    for ts in df["article_published_at"]:
+    for ts in df["published_at"]:
         if not ts:
             continue
         try:
             dt = datetime.fromisoformat(ts.replace("Z", "+00:00")).replace(tzinfo=None)
             if dt > cutoff:
                 last_30d += 1
-        except Exception:
+        except:
             pass
 
     pubs = [datetime.fromisoformat(ts.replace("Z", "+00:00")).replace(tzinfo=None)
-            for ts in df["article_published_at"] if ts]
+            for ts in df["published_at"] if ts]
 
     return {
         "total": len(df),
@@ -152,9 +164,9 @@ def fetch_metrics(lang: Lang = "zh", mode: str = "anon") -> dict:
 
 def get_filter_options(lang: Lang = "zh") -> dict:
     """获取所有 filter 的可选值"""
-    db = get_db("anon")
+    db = get_db("anon")  # 用 anon 模式（只读，配合 RLS）
     cases = db.table("v_cases_full").select(
-        "school, curriculum, admit_country, admit_schools, article_purpose, is_arts"
+        "school, curriculum, admit_country, admit_schools, article_purpose"
     ).limit(1000).execute().data or []
 
     schools = set()

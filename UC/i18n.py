@@ -10,7 +10,7 @@ TEXTS = {
     # ===== App =====
     "app_title": {
         "zh": "🎓 Student Case Study · 学生案例分析",
-        "en": "🎓 Student Case Study · 案例分析",
+        "en": "🎓 Student Case Study · Case Analysis",
     },
     "app_subtitle": {
         "zh": "对标研究 · 升学趋势 · 课程策略",

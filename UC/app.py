@@ -12,6 +12,11 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from data import fetch_cases, fetch_metrics
 from filters import render_sidebar
 from i18n import Lang, t
+from translations import (
+    translate_school, translate_curriculum, translate_purpose,
+    translate_country, translate_university,
+    translate_school_list, translate_country_list, translate_university_list,
+)
 
 
 # ===== 页面配置 =====
@@ -151,14 +156,22 @@ else:
     # 准备表格数据
     display = df.copy()
 
-    # 列表字段合并
-    def join_list(x):
+    # 列表字段合并（应用翻译）
+    def join_list(x, translate_fn=None):
         if isinstance(x, list):
-            return ", ".join(str(v) for v in x) if x else "—"
+            items = [translate_fn(v) if translate_fn else v for v in x] if x else []
+            return ", ".join(str(v) for v in items) if items else "—"
         return str(x) if x else "—"
 
-    display["admit_country_str"] = display["admit_country"].apply(join_list)
-    display["admit_schools_str"] = display["admit_schools"].apply(join_list)
+    display["school_str"] = display["school"].apply(lambda x: translate_school(x, lang) or "—")
+    display["curriculum_str"] = display["curriculum"].apply(lambda x: translate_curriculum(x, lang) or "—")
+    display["article_purpose_str"] = display["article_purpose"].apply(lambda x: translate_purpose(x, lang) or "—")
+    display["admit_country_str"] = display["admit_country"].apply(
+        lambda x: join_list(x, lambda v: translate_country(v, lang))
+    )
+    display["admit_schools_str"] = display["admit_schools"].apply(
+        lambda x: join_list(x, lambda v: translate_university(v, lang))
+    )
     display["admit_majors_str"] = display["admit_majors"].apply(join_list)
     display["test_scores_str"] = display["test_scores"].apply(
         lambda d: ", ".join(f"{k}={v}" for k, v in (d or {}).items()) if d else "—"
@@ -166,11 +179,11 @@ else:
 
     cols_map = {
         t("col_student", lang): "student_alias",
-        t("col_school", lang): "school",
-        t("col_curriculum", lang): "curriculum",
+        t("col_school", lang): "school_str",
+        t("col_curriculum", lang): "curriculum_str",
         t("col_admit_country", lang): "admit_country_str",
         t("col_admit_schools", lang): "admit_schools_str",
-        t("col_purpose", lang): "article_purpose",
+        t("col_purpose", lang): "article_purpose_str",
         t("col_published", lang): "article_published_at",
         t("col_confidence", lang): "confidence_score",
     }
@@ -199,11 +212,13 @@ else:
     # 案例详情 - 可展开
     with st.expander(f"🔍 {t('nav_case_detail', lang)}", expanded=False):
         for _, row in display.head(10).iterrows():
-            st.markdown(f"#### {row.get('student_alias') or '—'} @ {row.get('school') or '—'}")
+            student = row.get("student_alias") or "—"
+            school = translate_school(row.get("school"), lang) or "—"
+            st.markdown(f"#### {student} @ {school}")
             st.markdown(
                 f"**{t('col_admit_schools', lang)}:** {row.get('admit_schools_str')}  \n"
-                f"**{t('col_curriculum', lang)}:** {row.get('curriculum') or '—'}  \n"
-                f"**{t('col_purpose', lang)}:** {row.get('article_purpose') or '—'}  \n"
+                f"**{t('col_curriculum', lang)}:** {row.get('curriculum_str') or '—'}  \n"
+                f"**{t('col_purpose', lang)}:** {row.get('article_purpose_str') or '—'}  \n"
                 f"**📰 {row.get('article_title') or ''}**  \n"
                 f"🔗 {row.get('article_url') or ''}"
             )
