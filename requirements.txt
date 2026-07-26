@@ -1,0 +1,13 @@
+# UC Dashboard - 最小依赖
+# 看板只读 Supabase，无需抓取 / LLM 依赖
+python-dotenv==1.0.1          # .env 加载
+pydantic==2.9.2              # 配置 schema 校验
+
+# ===== Storage / DB =====
+supabase==2.8.1               # Supabase Python 客户端
+
+# ===== Data =====
+pandas==2.2.3                 # 数据处理
+
+# ===== Web Dashboard =====
+streamlit==1.39.0             # Web 看板
