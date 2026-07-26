@@ -149,6 +149,9 @@ function setLang(lang) {
   localStorage.setItem("lang", lang);
   applyI18n();
   renderAll();
+  // 筛选侧栏是动态渲染的，必须也重渲染才能跟上语言切换
+  renderFilters();
+  renderSavedFilters();
 }
 
 // ============================================
@@ -168,7 +171,7 @@ const SCHOOLS_EN = {
   "深国交": "SCIE (Shenzhen College of International Education)",
   "上海赫贤学校": "Shanghai He-Xian School",
   "上海赫贤学校（东校区）": "Shanghai He-Xian School (East Campus)",
-  "上海赫贤学校（璟旻艺术高中）": "Shanghai He-Xian School (Jingmin Art)",
+  "上海赫贤学校（璟旻艺术高中）": "Shanghai He-Xian School (Jingmin Arts High School)",
   "上海包玉刚实验学校": "Shanghai YK Pao School",
   "FindingSchool": "FindingSchool",
   "UWC中国": "UWC China",
