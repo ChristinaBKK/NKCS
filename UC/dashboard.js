@@ -544,7 +544,11 @@ function caseCardHTML(c) {
 
   return `
     <div class="case-card" data-id="${c.id}">
-      <div class="case-name">${escapeHTML(c.student_alias || "—")}</div>
+      <div class="case-name">
+        <a href="${escapeHTML(c.article_url || '#')}" target="_blank" rel="noopener" class="case-name-link" onclick="event.stopPropagation()" title="${escapeHTML(c.article_title || '')}">
+          ${escapeHTML(c.student_alias || "—")}
+        </a>
+      </div>
       <div class="case-school">${escapeHTML(c.school || c.account_name || "—")}</div>
       <div>
         ${c.curriculum ? `<span class="case-tag case-tag-curriculum">${escapeHTML(c.curriculum)}</span>` : ""}
@@ -561,7 +565,9 @@ function caseCardHTML(c) {
         </div>
       ` : ""}
       <div class="case-footer">
-        <span>${escapeHTML(c.article_title || "").slice(0, 30)}${(c.article_title || "").length > 30 ? "..." : ""}</span>
+        <a href="${escapeHTML(c.article_url || '#')}" target="_blank" rel="noopener" class="case-article-link" title="${escapeHTML(c.article_title || '')}">
+          📰 ${escapeHTML(c.article_title || "").slice(0, 30)}${(c.article_title || "").length > 30 ? "..." : ""}
+        </a>
         <span class="case-confidence">
           <span class="${confColor} font-medium">${conf}%</span>
           <span class="case-confidence-bar"><span class="case-confidence-fill" style="width:${conf}%"></span></span>

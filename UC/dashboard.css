@@ -176,6 +176,29 @@ body {
   font-size: 11px;
   color: #94a3b8;
 }
+.case-article-link {
+  color: #1e40af;
+  text-decoration: none;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition: color 0.15s;
+}
+.case-article-link:hover {
+  color: #1d4ed8;
+  text-decoration: underline;
+}
+.case-name-link {
+  color: #1e3a8a;
+  text-decoration: none;
+  transition: color 0.15s;
+}
+.case-name-link:hover {
+  color: #2563eb;
+  text-decoration: underline;
+}
 .case-confidence {
   display: flex;
   align-items: center;
