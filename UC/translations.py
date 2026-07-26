@@ -11,7 +11,7 @@ SCHOOLS = {
   "深国交": "Shenzhen College of International Education (SCIE)",
   "上海赫贤学校": "Shanghai He-Xian School",
   "上海赫贤学校（东校区）": "Shanghai He-Xian School (East Campus)",
-  "璟旻艺术高中": "Jingmin Art High School",
+  "上海赫贤学校（璟旻艺术高中）": "Shanghai He-Xian School (Jingmin Art)",
   "上海包玉刚实验学校": "Shanghai YK Pao School",
   "FindingSchool": "FindingSchool",
   "UWC中国": "UWC China",
