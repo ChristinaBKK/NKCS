@@ -48,6 +48,9 @@ const I18N = {
     grade: "届",
     admitTo: "录取",
     major: "专业",
+    gpa: "GPA",
+    testScores: "标化成绩",
+    aiConfidence: "AI 置信度",
     keyTakeaways: "关键经验",
     activities: "活动 / 竞赛",
     sourceArticle: "原文",
@@ -102,6 +105,9 @@ const I18N = {
     grade: "Class",
     admitTo: "Admitted to",
     major: "Major",
+    gpa: "GPA",
+    testScores: "Test Scores",
+    aiConfidence: "AI Confidence",
     keyTakeaways: "Key Takeaways",
     activities: "Activities",
     sourceArticle: "Source article",
@@ -790,14 +796,14 @@ function openModal(id) {
         <span class="modal-key">${t("curriculum") || "Curriculum"}</span><span class="modal-value">${escapeHTML(trCurr(c.curriculum) || "—")}</span>
         <span class="modal-key">${t("purpose")}</span><span class="modal-value">${escapeHTML(trPurpose(c.article_purpose) || "—")}</span>
         <span class="modal-key">${t("grade")}</span><span class="modal-value">${escapeHTML(c.grade || "—")}</span>
-        <span class="modal-key">GPA</span><span class="modal-value">${escapeHTML(c.gpa || "—")}</span>
-        <span class="modal-key">AI ${t("confidence") || "置信度"}</span><span class="modal-value">${conf}%</span>
+        <span class="modal-key">${t("gpa")}</span><span class="modal-value">${escapeHTML(c.gpa || "—")}</span>
+        <span class="modal-key">${t("aiConfidence")}</span><span class="modal-value">${conf}%</span>
       </div>
     </div>
 
     ${Object.keys(ts).length ? `
     <div class="modal-section">
-      <div class="modal-section-title">Test Scores / 标化</div>
+      <div class="modal-section-title">${t("testScores")}</div>
       ${testScoresHTML}
     </div>
     ` : ""}
