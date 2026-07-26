@@ -53,7 +53,11 @@ COUNTRIES = {
   "中国香港": "Hong Kong SAR, China",
   "澳大利亚": "Australia",
   "美国": "United States",
-  "英国": "United Kingdom"
+  "英国": "United Kingdom",
+  "意大利": "Italy",
+  "新加坡": "Singapore",
+  "瑞士": "Switzerland",
+  "韩国": "South Korea"
 }
 
 
