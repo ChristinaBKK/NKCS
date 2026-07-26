@@ -154,7 +154,7 @@ function setLang(lang) {
 // ============================================
 const SUPABASE_URL = "https://lrkmyzgmqcdllctbhxdd.supabase.co";
 // 使用 anon key（公开，配合 RLS 仅可读，安全）
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxya215emdtcWNkbGxjdGJoeGRkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg4MjU5MDksImV4cCI6MjAwOTM0OTkwOX0.qg9_BRb9h4LA1yuAjyfDu7Ay8aDjAcWM3mPvw3K0lEA";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxya215emdtcWNkbGxjdGJoeGRkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUwODAzNTAsImV4cCI6MjEwMDY1NjM1MH0.0VkZgpOG0A5sFFoRtYR5LyCW26U3AlXwg0WuTqbH99M";
 // 避免与 window.supabase 全局变量冲突（supabase-js UMD 已经在 window.supabase 上挂载）
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
