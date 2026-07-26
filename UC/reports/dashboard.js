@@ -306,6 +306,74 @@ const UNIVERSITIES_EN = {
   "香港理工大学": "The Hong Kong Polytechnic University",
   "香港科技大学": "The Hong Kong University of Science and Technology",
 };
+const MAJORS_EN = {
+  "临床医学": "Clinical Medicine",
+  "人类学": "Anthropology",
+  "传媒设计": "Communication Design",
+  "分子生物学": "Molecular Biology",
+  "分子工程": "Molecular Engineering",
+  "创意写作": "Creative Writing",
+  "创意计算": "Creative Computing",
+  "化工": "Chemical Engineering",
+  "化学": "Chemistry",
+  "医学": "Medicine",
+  "商业": "Business",
+  "商科": "Business",
+  "基因科学": "Genetics",
+  "娱乐设计": "Entertainment Design",
+  "媒体": "Media Studies",
+  "媒体设计": "Media Design",
+  "动物学": "Zoology",
+  "动画": "Animation",
+  "历史": "History",
+  "工业设计": "Industrial Design",
+  "工程": "Engineering",
+  "平面设计": "Graphic Design",
+  "戏剧与表演设计": "Theatre & Performance Design",
+  "戏剧与银幕戏服设计": "Theatre & Screen Costume Design",
+  "教育学": "Education",
+  "数字媒体与传媒": "Digital Media & Communication",
+  "数字艺术": "Digital Art",
+  "数字艺术计算": "Digital Art & Computing",
+  "数据分析": "Data Analytics",
+  "数据科学": "Data Science",
+  "时尚": "Fashion",
+  "款待与休闲产业管理": "Hospitality & Leisure Industry Management",
+  "数学": "Mathematics",
+  "文化艺术管理": "Arts & Cultural Management",
+  "环境工程": "Environmental Engineering",
+  "生物": "Biology",
+  "生物学": "Biology",
+  "生物工程": "Bioengineering",
+  "电子电气工程": "Electrical & Electronic Engineering",
+  "电影": "Film",
+  "电气工程与设计": "Electrical Engineering & Design",
+  "电脑动画与视觉特效": "Computer Animation & Visual Effects",
+  "社会科学": "Social Sciences",
+  "社会心理学": "Social Psychology",
+  "社会学": "Sociology",
+  "纯艺术": "Fine Arts",
+  "经济学": "Economics",
+  "经济": "Economics",
+  "自然科学-物理": "Natural Sciences (Physics)",
+  "自然科学（物理方向）": "Natural Sciences (Physics)",
+  "自然科学-生化": "Natural Sciences (Biochemistry)",
+  "自然科学（生物方向）": "Natural Sciences (Biology)",
+  "艺术与科技": "Art & Technology",
+  "艺术与设计": "Art & Design",
+  "艺术史": "Art History",
+  "艺术指导与视觉特效": "Art Direction & Visual Effects",
+  "表演服装": "Performance Costume",
+  "表演服装设计": "Performance Costume Design",
+  "视觉传达": "Visual Communication",
+  "计算机科学": "Computer Science",
+  "设计": "Design",
+  "设计创新": "Design Innovation",
+  "兽医学": "Veterinary Medicine",
+  "用户研究": "User Research",
+  "用户体验设计": "UX Design",
+  "交互设计": "Interaction Design",
+};
 const PURPOSES_EN = {
   "录取喜报": "Admission Announcement",
   "成长故事": "Growth Story",
@@ -328,9 +396,11 @@ const trCountry = (cn) => tr(cn, COUNTRIES_EN);
 const trUniv = (cn) => tr(cn, UNIVERSITIES_EN);
 const trPurpose = (cn) => tr(cn, PURPOSES_EN);
 const trCurr = (cn) => tr(cn, CURRICULUMS_EN);
+const trMajor = (cn) => tr(cn, MAJORS_EN);
 const trSchoolList = (arr) => (arr || []).map(trSchool).join(", ");
 const trCountryList = (arr) => (arr || []).map(trCountry).join(", ");
 const trUnivList = (arr) => (arr || []).map(trUniv).join(", ");
+const trMajorList = (arr) => (arr || []).map(trMajor).join(", ");
 
 // ============================================
 //  全局状态
@@ -758,7 +828,7 @@ function caseCardHTML(c) {
       </div>
       <div class="case-admit">
         <div class="case-admit-school">${countryFlag} ${escapeHTML(trUniv(admit))}</div>
-        ${major ? `<div class="case-admit-country">${escapeHTML(major)} · ${escapeHTML(trCountry(country))}</div>` : `<div class="case-admit-country">${escapeHTML(trCountry(country))}</div>`}
+        ${major ? `<div class="case-admit-country">${escapeHTML(trMajor(major))} · ${escapeHTML(trCountry(country))}</div>` : `<div class="case-admit-country">${escapeHTML(trCountry(country))}</div>`}
       </div>
       ${takeaways.length ? `
         <div class="case-takeaway">
@@ -818,7 +888,7 @@ function openModal(id) {
       <div class="modal-section-title">${t("admitTo")}</div>
       <div class="case-admit" style="margin-top:0">
         <div class="case-admit-school">${flagOf((c.admit_country || [])[0] || "")} ${escapeHTML(trUnivList(c.admit_schools) || "—")}</div>
-        <div class="case-admit-country">${escapeHTML((c.admit_majors || []).join("、"))} · ${escapeHTML(trCountryList(c.admit_country))}</div>
+        <div class="case-admit-country">${escapeHTML(trMajorList(c.admit_majors))} · ${escapeHTML(trCountryList(c.admit_country))}</div>
       </div>
     </div>
 
