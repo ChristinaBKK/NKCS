@@ -92,16 +92,21 @@ RLS policies in `rls.sql` block `INSERT / UPDATE / DELETE` for the anon role.
 
 ```
 UC/
-├── app.py                # Streamlit 入口 / Streamlit entry
+├── app.py                # Streamlit 入口（本地运行） / Streamlit entry (local)
 ├── data.py               # Supabase 数据访问 / Data access layer
 ├── filters.py            # 侧边栏筛选 + 角色预设 / Filters + role presets
 ├── i18n.py               # 中英双语字典 / Bilingual text dict
+├── translations.py       # 数据库值翻译表（zh → en）/ DB value translations
 ├── config.py             # 配置加载（只读 Supabase）/ Config loader
 ├── rls.sql               # RLS 策略 / RLS policies
 ├── requirements.txt      # 最小依赖 / Minimal deps
 ├── .env.example          # 环境变量模板 / Env template
 ├── .gitignore
 ├── start.sh              # 启动脚本 / Launch script
+├── reports/              # 静态 HTML 看板（GitHub Pages 入口）
+│   ├── index.html        # 静态看板主页
+│   ├── dashboard.css     # 样式
+│   └── dashboard.js      # 数据 + 过滤 + Chart.js
 └── README.md
 ```
 
