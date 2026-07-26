@@ -544,10 +544,11 @@ function renderStats() {
 //  渲染：图表
 // ============================================
 function renderCharts() {
-  // 国家分布
+  // 国家分布（图例跟随语言）
   const countryCount = {};
   FILTERED.forEach((c) => (c.admit_country || []).forEach((co) => {
-    countryCount[co] = (countryCount[co] || 0) + 1;
+    const key = trCountry(co);  // 中文/英文都用作 key，避免重复
+    countryCount[key] = (countryCount[key] || 0) + 1;
   }));
   renderPieChart("chartCountries", countryCount, ["#1d4ed8", "#f59e0b", "#0ea5e9", "#10b981", "#8b5cf6", "#ec4899", "#f43f5e", "#06b6d4"]);
 
@@ -556,14 +557,16 @@ function renderCharts() {
   FILTERED.forEach((c) => {
     const k = c.curriculum || "Other";
     if (k === "IGCSE") return;
-    currCount[k] = (currCount[k] || 0) + 1;
+    const key = trCurr(k);
+    currCount[key] = (currCount[key] || 0) + 1;
   });
   renderBarChart("chartCurriculum", currCount, ["#1d4ed8", "#f59e0b", "#10b981", "#8b5cf6", "#ec4899"]);
 
   // 录取学校 Top 10
   const admitCount = {};
   FILTERED.forEach((c) => (c.admit_schools || []).forEach((s) => {
-    admitCount[s] = (admitCount[s] || 0) + 1;
+    const key = trUniv(s);
+    admitCount[key] = (admitCount[key] || 0) + 1;
   }));
   const top10 = Object.entries(admitCount).sort((a, b) => b[1] - a[1]).slice(0, 10);
   renderHorizontalBarChart("chartAdmit", Object.fromEntries(top10), "#1d4ed8");
