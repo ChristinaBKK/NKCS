@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Mathematics Curriculum Pathways</title>
+    <style>
+        :root {
+            --ink: #17232d;
+            --muted: #60707c;
+            --paper: #ffffff;
+            --page: #edf1f3;
+            --line: #9aa8b2;
+            --accent: #d94f45;
+            --advanced: #c94f45;
+            --fast: #158179;
+            --regular: #4d7c3f;
+            --further: #3765a3;
+            --eu: #7552a3;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            color: var(--ink);
+            background: linear-gradient(rgba(23,35,45,.035) 1px, transparent 1px), linear-gradient(90deg, rgba(23,35,45,.035) 1px, transparent 1px), var(--page);
+            background-size: 24px 24px;
+            font-family: "Avenir Next", "Segoe UI", sans-serif;
+        }
+        button { font: inherit; }
+        .app {
+            width: min(100% - 32px, 1720px);
+            margin: 16px auto;
+            background: var(--paper);
+            border: 1px solid #d6dee3;
+            box-shadow: 0 12px 34px rgba(38,52,62,.1);
+        }
+        .masthead {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 24px;
+            padding: 28px 32px 22px;
+            border-bottom: 1px solid #dce3e7;
+        }
+        .eyebrow {
+            margin: 0 0 4px;
+            color: var(--accent);
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: .12em;
+            text-transform: uppercase;
+        }
+        h1 {
+            margin: 0;
+            font-family: Georgia, "Times New Roman", serif;
+            font-size: clamp(30px, 4vw, 52px);
+            font-weight: 500;
+            letter-spacing: 0;
+            line-height: 1;
+        }
+        .intro {
+            max-width: 480px;
+            margin: 12px 0 0;
+            color: var(--muted);
+            font-size: 14px;
+            line-height: 1.55;
+        }
+        .masthead-side {
+            width: min(520px, 42vw);
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+        }
+        .school-logo {
+            display: block;
+            width: min(100%, 360px);
+            height: auto;
+            margin-bottom: 14px;
+        }
+        .toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            padding: 14px 32px;
+            background: #f8fafb;
+            border-bottom: 1px solid #dce3e7;
+        }
+        .filters {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px;
+            background: #e7ecef;
+            border-radius: 6px;
+        }
+        .filter-group-label {
+            padding: 0 7px;
+            color: #6b7983;
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+        .filter-group-label.secondary {
+            margin-left: 5px;
+            padding-left: 12px;
+            border-left: 1px solid #c5d0d7;
+        }
+        .filter, .print-button {
+            min-height: 34px;
+            padding: 7px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 700;
+        }
+        .filter {
+            color: #46545f;
+            background: transparent;
+            border: 0;
+        }
+        .filter:hover, .filter:focus-visible { color: var(--ink); background: rgba(255,255,255,.65); outline: none; }
+        .filter.active { color: var(--ink); background: #fff; box-shadow: 0 1px 4px rgba(24,35,44,.16); }
+        .actions { display: flex; align-items: center; gap: 14px; }
+        .legend { display: flex; gap: 14px; color: var(--muted); font-size: 12px; white-space: nowrap; }
+        .legend span { display: inline-flex; align-items: center; gap: 6px; }
+        .legend i { width: 25px; border-top: 2px solid #596773; }
+        .legend .optional { border-top-style: dashed; }
+        .print-button { color: var(--ink); background: #fff; border: 1px solid #cbd5db; }
+        .print-button:hover, .print-button:focus-visible { border-color: #7c8c97; outline: none; }
+        .status {
+            min-height: 42px;
+            margin: 0;
+            padding: 11px 32px;
+            color: #42515c;
+            background: #fffaf0;
+            border-bottom: 1px solid #eadfc6;
+            font-size: 13px;
+        }
+        .chart-scroll { overflow-x: auto; overscroll-behavior-inline: contain; }
+        .chart { position: relative; width: 1780px; height: 830px; background: #fff; }
+        .chart svg { position: absolute; inset: 0; z-index: 1; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
+        .edge { fill: none; stroke: var(--line); stroke-width: 2; transition: opacity 180ms ease, stroke 180ms ease, stroke-width 180ms ease; }
+        .edge.optional { stroke-dasharray: 5 5; }
+        .edge.dimmed { opacity: .08; }
+        .edge.highlighted { stroke: #263844; stroke-width: 3; }
+        .grade-heading {
+            position: absolute;
+            top: 24px;
+            z-index: 2;
+            width: 176px;
+            padding-bottom: 10px;
+            color: #53626d;
+            border-bottom: 2px solid #cbd5db;
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: .08em;
+            text-align: center;
+            text-transform: uppercase;
+        }
+        .grade-heading::after { content: ""; position: absolute; top: 31px; left: 50%; width: 1px; height: 748px; background: #edf1f3; }
+        .lane-label {
+            position: absolute;
+            left: 18px;
+            z-index: 2;
+            width: 82px;
+            color: #6d7b85;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: .06em;
+            text-align: right;
+            text-transform: uppercase;
+        }
+        .lane-label::after { content: ""; position: absolute; top: 8px; left: 92px; width: 1635px; border-top: 1px solid #edf1f3; }
+        .course {
+            position: absolute;
+            z-index: 3;
+            width: 176px;
+            min-height: 82px;
+            padding: 11px 12px 10px 15px;
+            color: var(--ink);
+            background: #fff;
+            border: 1px solid #cdd7dd;
+            border-left: 5px solid var(--track-color, #73838e);
+            border-radius: 6px;
+            box-shadow: 0 3px 10px rgba(26,39,48,.08);
+            cursor: pointer;
+            text-align: left;
+            transition: opacity 180ms ease, transform 180ms ease, box-shadow 180ms ease;
+        }
+        .course:hover, .course:focus-visible, .course.selected { z-index: 4; outline: none; transform: translateY(-2px); box-shadow: 0 7px 18px rgba(26,39,48,.18); }
+        .course.selected { box-shadow: 0 0 0 3px rgba(31,48,59,.2), 0 7px 18px rgba(26,39,48,.18); }
+        .course.dimmed { opacity: .16; }
+        .course-title { display: block; margin-bottom: 5px; font-size: 13px; font-weight: 800; line-height: 1.18; }
+        .course-detail, .course-time { display: block; color: #52616c; font-size: 11px; line-height: 1.28; }
+        .course-time { margin-top: 3px; }
+        .course[data-track="advanced"] { --track-color: var(--advanced); }
+        .course[data-track="fast"] { --track-color: var(--fast); }
+        .course[data-track="regular"] { --track-color: var(--regular); }
+        .course[data-track="further"] { --track-color: var(--further); }
+        .course[data-track="eu"] { --track-color: var(--eu); }
+        .course.foundation { --track-color: #7d8991; }
+        .course.pathway-entry::before {
+            content: "Starts in Grade 11";
+            position: absolute;
+            top: -24px;
+            left: -1px;
+            padding: 3px 7px;
+            color: #4e5d68;
+            background: #eef2f4;
+            border: 1px solid #d2dce2;
+            border-radius: 3px;
+            font-size: 9px;
+            font-weight: 800;
+            letter-spacing: .06em;
+            line-height: 1;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+        .course.combined { width: 140px; min-height: 54px; padding: 12px; border-left-color: #b28a2d; background: #fff8df; text-align: center; }
+        .outcome { width: 220px; min-height: 98px; border: 1px dashed #8b9aa5; border-left: 5px solid #263844; background: #f8fafb; }
+        .outcome .course-title { font-family: Georgia, "Times New Roman", serif; font-size: 15px; font-weight: 700; }
+        .drawer {
+            position: fixed;
+            right: 20px;
+            bottom: 20px;
+            z-index: 10;
+            width: min(360px, calc(100vw - 40px));
+            padding: 20px;
+            color: #fff;
+            background: #17232d;
+            border-radius: 6px;
+            box-shadow: 0 18px 50px rgba(13,23,30,.28);
+            transform: translateY(calc(100% + 30px));
+            transition: transform 220ms ease;
+        }
+        .drawer.open { transform: translateY(0); }
+        .drawer-close { position: absolute; top: 10px; right: 10px; width: 32px; height: 32px; color: #fff; background: transparent; border: 0; cursor: pointer; font-size: 24px; line-height: 1; }
+        .drawer-kicker { margin: 0 36px 5px 0; color: #aebbc4; font-size: 11px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
+        .drawer h2 { margin: 0 36px 10px 0; font-family: Georgia, "Times New Roman", serif; font-size: 24px; font-weight: 500; }
+        .drawer-label { margin: 0 0 5px; color: #aebbc4; font-size: 10px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
+        .drawer p { margin: 0; color: #d8e0e5; font-size: 13px; line-height: 1.55; }
+        .module-key { display: flex; flex-wrap: wrap; gap: 10px 22px; padding: 14px 32px 18px; color: #5d6c77; background: #f8fafb; border-top: 1px solid #dce3e7; font-size: 12px; }
+        .module-key strong { color: var(--ink); }
+        @media (max-width: 900px) {
+            .app { width: 100%; margin: 0; border: 0; }
+            .masthead { display: block; padding: 22px 18px 18px; }
+            .masthead-side { width: min(100%, 520px); margin-top: 18px; align-items: flex-start; }
+            .school-logo { margin-bottom: 12px; }
+            .toolbar { align-items: flex-start; padding: 12px 18px; overflow-x: auto; }
+            .filters { flex-wrap: nowrap; }
+            .filter { white-space: nowrap; }
+            .filter-group-label { display: none; }
+            .legend { display: none; }
+            .status, .module-key { padding-inline: 18px; }
+        }
+        @media print {
+            @page { size: A3 landscape; margin: 10mm; }
+            body { background: #fff; }
+            .app { width: 100%; margin: 0; border: 0; box-shadow: none; }
+            .toolbar, .status, .drawer, .module-key { display: none; }
+            .masthead { padding: 0 0 14px; }
+            .chart-scroll { overflow: visible; }
+            .chart { transform: scale(.78); transform-origin: top left; }
+            .course.dimmed, .edge.dimmed { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <main class="app">
+        <header class="masthead">
+            <div>
+                <p class="eyebrow">Secondary Mathematics</p>
+                <h1>Curriculum pathways</h1>
+                <p class="intro">Choose a track to simplify the map, or select any course to trace the routes into and out of it.</p>
+            </div>
+            <div class="masthead-side">
+                <img class="school-logo" src="https://raw.githubusercontent.com/ChristinaBKK/G10JuneTT/main/school_logo.png" alt="Wuxi Dipont School of Arts and Science and King's College International School, Wuxi">
+            </div>
+        </header>
+        <section class="toolbar" aria-label="Chart controls">
+            <div class="filters" role="group" aria-label="Filter by track">
+                <span class="filter-group-label" aria-hidden="true">Core tracks</span>
+                <button class="filter active" type="button" data-filter="all">All pathways</button>
+                <button class="filter" type="button" data-filter="advanced">Advanced</button>
+                <button class="filter" type="button" data-filter="fast">Fast</button>
+                <button class="filter" type="button" data-filter="regular">Regular</button>
+                <span class="filter-group-label secondary" aria-hidden="true">From Grade 11</span>
+                <button class="filter" type="button" data-filter="further">Regular + Further</button>
+                <button class="filter" type="button" data-filter="eu">AS / EU</button>
+            </div>
+            <div class="actions">
+                <div class="legend" aria-label="Connection legend"><span><i></i>Normal progression</span><span><i class="optional"></i>Placement test enrollment</span></div>
+                <button class="print-button" type="button" id="print-chart">Print</button>
+            </div>
+        </section>
+        <p class="status" id="status" aria-live="polite">Showing all pathways. Select a course to trace its connections.</p>
+        <div class="chart-scroll" tabindex="0" aria-label="Scrollable curriculum pathway chart">
+            <section class="chart" id="chart">
+                <svg id="connections" aria-hidden="true">
+                    <defs>
+                        <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#9aa8b2"></path></marker>
+                        <marker id="arrow-active" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#263844"></path></marker>
+                    </defs>
+                </svg>
+                <div class="grade-heading" style="left:120px">Grade 7</div><div class="grade-heading" style="left:330px">Grade 8</div><div class="grade-heading" style="left:540px">Grade 9</div><div class="grade-heading" style="left:750px">Grade 10</div><div class="grade-heading" style="left:960px">Grade 11</div><div class="grade-heading" style="left:1170px">Grade 12</div><div class="grade-heading" style="left:1530px;width:220px">University study options</div>
+                <div class="lane-label" style="top:124px">Advanced</div><div class="lane-label" style="top:264px">Fast</div><div class="lane-label" style="top:404px">Regular</div>
+
+                <button class="course foundation" id="G7_CN" data-track="foundation" data-grade="Grade 7" style="left:120px;top:82px"><span class="course-title">Bilingual</span><span class="course-detail">National Curriculum</span></button>
+                <button class="course foundation" id="G7_Intl" data-track="foundation" data-grade="Grade 7" style="left:120px;top:222px"><span class="course-title">International</span><span class="course-detail">Cambridge LS 0862</span></button>
+                <button class="course" id="G8_CN_ADV" data-track="advanced" data-grade="Grade 8" style="left:330px;top:82px"><span class="course-title">Advanced · Bilingual</span><span class="course-detail">IGCSE 0580</span><span class="course-time">1-year course</span></button>
+                <button class="course" id="G8_INTL_ADV" data-track="advanced" data-grade="Grade 8" style="left:330px;top:182px"><span class="course-title">Advanced · International</span><span class="course-detail">IGCSE 0580</span><span class="course-time">1-year course</span></button>
+                <button class="course foundation" id="G8_INTL_Other" data-track="foundation" data-grade="Grade 8" style="left:330px;top:302px"><span class="course-title">International</span><span class="course-detail">Cambridge LS 0862</span></button>
+                <button class="course foundation" id="G8_CN_Other" data-track="foundation" data-grade="Grade 8" style="left:330px;top:422px"><span class="course-title">Bilingual</span><span class="course-detail">National Curriculum</span></button>
+                <button class="course" id="G9_ADV" data-track="advanced" data-grade="Grade 9" style="left:540px;top:82px"><span class="course-title">Advanced Track</span><span class="course-detail">P1 + P2 · January</span><span class="course-time">Optional S1 · May</span></button>
+                <button class="course" id="G9_Fast" data-track="fast" data-grade="Grade 9" style="left:540px;top:222px"><span class="course-title">Fast Track</span><span class="course-detail">IGCSE 0580</span><span class="course-time">1-year course</span></button>
+                <button class="course" id="G9_Regular" data-track="regular" data-grade="Grade 9" style="left:540px;top:362px"><span class="course-title">Regular Track</span><span class="course-detail">IGCSE 0580</span><span class="course-time">1.5-year course</span></button>
+                <button class="course" id="G10_ADV" data-track="advanced" data-grade="Grade 10" style="left:750px;top:82px"><span class="course-title">Advanced Track</span><span class="course-detail">P3 + P4 · January</span><span class="course-time">M1 · May</span></button>
+                <button class="course" id="G10_Fast" data-track="fast" data-grade="Grade 10" style="left:750px;top:222px"><span class="course-title">Fast Track</span><span class="course-detail">P1 + P2 · January</span><span class="course-time">Optional S1 · June</span></button>
+                <button class="course" id="G10_Regular" data-track="regular" data-grade="Grade 10" style="left:750px;top:362px"><span class="course-title">Regular Track</span><span class="course-detail">IGCSE 0580 + P1</span><span class="course-time">June entry</span></button>
+                <button class="course" id="G11_ADV" data-track="advanced" data-grade="Grade 11" style="left:960px;top:82px"><span class="course-title">Advanced Track</span><span class="course-detail">FP1 + FP2 · January</span><span class="course-time">Optional D1 · June</span></button>
+                <button class="course" id="G11_Fast" data-track="fast" data-grade="Grade 11" style="left:960px;top:222px"><span class="course-title">Fast Track</span><span class="course-detail">P3 + M1 · January</span><span class="course-time">P4 + D1 · June</span></button>
+                <button class="course" id="G11_Regular" data-track="regular" data-grade="Grade 11" style="left:960px;top:362px"><span class="course-title">Regular Track</span><span class="course-detail">P2 + M1 · January</span><span class="course-time">S2 or M1 · June</span></button>
+                <button class="course pathway-entry" id="G11_Further" data-track="further" data-grade="Grade 11 pathway" style="left:960px;top:502px"><span class="course-title">Further Maths</span><span class="course-detail">FP1 + S2 · January</span><span class="course-time">D1 · June</span></button>
+                <button class="course pathway-entry" id="G11_EU" data-track="eu" data-grade="Grade 11 pathway" style="left:960px;top:642px"><span class="course-title">AS / EU Pathway</span><span class="course-detail">P2 · January</span><span class="course-time">S1 · June</span></button>
+                <button class="course" id="G12_ADV" data-track="advanced" data-grade="Grade 12" style="left:1170px;top:82px"><span class="course-title">Advanced Track</span><span class="course-detail">M2 + S2 · January</span><span class="course-time">FP3 or M3 · June</span></button>
+                <button class="course" id="G12_Fast" data-track="fast" data-grade="Grade 12" style="left:1170px;top:222px"><span class="course-title">Fast Track</span><span class="course-detail">FP1 + FP2 + S2 · January</span><span class="course-time">M2 + FP3 or M3 · June</span></button>
+                <button class="course" id="G12_Regular" data-track="regular" data-grade="Grade 12" style="left:1170px;top:362px"><span class="course-title">Regular Track</span><span class="course-detail">P3 · January</span><span class="course-time">P4 · June</span></button>
+                <button class="course" id="G12_Further" data-track="further" data-grade="Grade 12" style="left:1170px;top:502px"><span class="course-title">Further Maths</span><span class="course-detail">FP2 + M2 · January</span><span class="course-time">FP3 or M3 · June</span></button>
+                <button class="course" id="G12_EU" data-track="eu" data-grade="Grade 12" style="left:1170px;top:642px"><span class="course-title">AS / EU Pathway</span><span class="course-detail">S2 or M1 · June</span></button>
+                <button class="course combined" id="Combined" data-track="combined" data-grade="Grade 12" style="left:1370px;top:442px"><span class="course-title">Combined Route</span></button>
+                <button class="course outcome" id="TOP" data-track="outcome" data-grade="University study options" style="left:1530px;top:172px"><span class="course-title">Quantitative &amp; Technical</span><span class="course-detail">Maths, Engineering, Computer Science, Physics, Chemistry, Finance/Economics</span></button>
+                <button class="course outcome" id="MED" data-track="outcome" data-grade="University study options" style="left:1530px;top:402px"><span class="course-title">Broad Academic</span><span class="course-detail">Chemistry, Biology, other sciences, Humanities, Business, Management, Art</span></button>
+                <button class="course outcome" id="Other" data-track="outcome" data-grade="University study options" style="left:1530px;top:642px"><span class="course-title">AS-Level Entry</span><span class="course-detail">Universities that accept AS grades</span></button>
+            </section>
+        </div>
+        <footer class="module-key" aria-label="Module abbreviations"><strong>Module key</strong><span>P · Pure Mathematics</span><span>M · Mechanics</span><span>S · Statistics</span><span>FP · Further Pure Mathematics</span><span>D · Decision Mathematics</span></footer>
+    </main>
+    <aside class="drawer" id="drawer" aria-live="polite" aria-hidden="true" inert>
+        <button class="drawer-close" id="drawer-close" type="button" aria-label="Close details">×</button><p class="drawer-kicker" id="drawer-kicker"></p><h2 id="drawer-title"></h2><div class="drawer-label" id="drawer-label">Teaching focus</div><p id="drawer-copy"></p>
+    </aside>
+    <script>
+        const edges = [
+            ["G7_CN","G8_CN_ADV",true],["G7_CN","G8_CN_Other",false],["G7_Intl","G8_INTL_ADV",true],["G7_Intl","G8_INTL_Other",false],
+            ["G8_CN_ADV","G9_ADV",false],["G8_INTL_ADV","G9_ADV",false],["G8_INTL_Other","G9_Regular",false],["G8_CN_Other","G9_Regular",false],["G8_INTL_Other","G9_Fast",true],["G8_CN_Other","G9_Fast",true],
+            ["G9_ADV","G10_ADV",false],["G9_Fast","G10_Fast",false],["G9_Regular","G10_Regular",false],["G10_ADV","G11_ADV",false],["G10_Fast","G11_Fast",false],["G10_Regular","G11_Regular",false],["G10_Regular","G11_Further",true],
+            ["G11_ADV","G12_ADV",false],["G11_Fast","G12_Fast",false],["G11_Regular","G12_Regular",false],["G11_Further","G12_Further",false],["G11_EU","G12_EU",false],
+            ["G12_Regular","Combined",false],["G12_Further","Combined",false],["G12_ADV","TOP",false],["G12_Fast","TOP",false],["G12_Regular","MED",false],["Combined","TOP",false],["G12_EU","Other",false]
+        ];
+        const routes = {
+            advanced:["G7_CN","G7_Intl","G8_CN_ADV","G8_INTL_ADV","G9_ADV","G10_ADV","G11_ADV","G12_ADV","TOP"],
+            fast:["G7_CN","G7_Intl","G8_INTL_Other","G8_CN_Other","G9_Fast","G10_Fast","G11_Fast","G12_Fast","TOP"],
+            regular:["G7_CN","G7_Intl","G8_INTL_Other","G8_CN_Other","G9_Regular","G10_Regular","G11_Regular","G12_Regular","Combined","TOP","MED"],
+            further:["G7_CN","G7_Intl","G8_INTL_Other","G8_CN_Other","G9_Regular","G10_Regular","G11_Regular","G11_Further","G12_Regular","G12_Further","Combined","TOP"], eu:["G11_EU","G12_EU","Other"]
+        };
+        const teachingContent = {
+            G7_CN:"Builds fluency in number, algebra, geometry, measurement and data through the national curriculum, with emphasis on reasoning and clear mathematical communication.",
+            G7_Intl:"Develops Cambridge Lower Secondary skills in number, algebra, geometry, measure, statistics and probability through investigation and problem-solving.",
+            G8_CN_ADV:"Accelerated IGCSE study in a bilingual learning context, covering number, algebra, graphs, geometry, trigonometry, probability and statistics.",
+            G8_INTL_ADV:"Accelerated IGCSE study in an international learning context, covering number, algebra, graphs, geometry, trigonometry, probability and statistics.",
+            G8_INTL_Other:"Strengthens Lower Secondary foundations in proportional reasoning, algebra, geometry and data, preparing students for formal IGCSE study.",
+            G8_CN_Other:"Consolidates national-curriculum foundations in number, algebra, geometry and statistics, preparing students for formal IGCSE study.",
+            G9_ADV:"Introduces Pure Mathematics through algebra, functions, coordinate geometry, trigonometry and calculus, with optional introductory statistics.",
+            G9_Fast:"Completes the core IGCSE programme at pace: algebra, graphs, geometry, trigonometry, vectors, probability, statistics and mathematical modelling.",
+            G9_Regular:"Establishes IGCSE fluency in number, algebra, graphs, geometry, trigonometry and data handling, with time for practice and consolidation.",
+            G10_ADV:"Extends Pure Mathematics into sequences, logarithms, advanced trigonometry, vectors and deeper differentiation and integration, then introduces mechanics.",
+            G10_Fast:"Moves from IGCSE into Pure Mathematics: algebra, functions, coordinate geometry, trigonometry and introductory calculus, with optional statistics.",
+            G10_Regular:"Completes IGCSE topics and begins Pure Mathematics through algebra, functions, coordinate geometry and introductory calculus.",
+            G11_ADV:"Develops proof and advanced algebra, complex numbers, matrices, series and further calculus, with optional decision mathematics and algorithms.",
+            G11_Fast:"Deepens Pure Mathematics through advanced algebra, trigonometry and calculus; mechanics applies these ideas to forces, motion and equilibrium.",
+            G11_Regular:"Builds Pure Mathematics in algebra, functions, trigonometry and calculus, alongside applied work in mechanics and, where selected, statistics.",
+            G11_Further:"Adds Further Pure topics such as complex numbers, matrices, proof and series, alongside advanced statistics and decision mathematics.",
+            G11_EU:"Develops AS-level Pure Mathematics and statistics, including algebra, functions, trigonometry, calculus, probability and data analysis.",
+            G12_ADV:"Applies mathematics to advanced mechanics and statistics, then extends Further Pure Mathematics or mechanics through more demanding modelling and calculus.",
+            G12_Fast:"Combines Further Pure Mathematics with advanced statistics and mechanics, including complex numbers, matrices, distributions and mathematical modelling.",
+            G12_Regular:"Completes advanced Pure Mathematics through functions, vectors, numerical methods, trigonometry and extended differentiation and integration.",
+            G12_Further:"Extends Further Pure Mathematics and mechanics through complex numbers, matrices, differential equations, motion, forces and advanced modelling.",
+            G12_EU:"Completes the applied AS component through statistics or mechanics, focusing on probability and inference or forces and motion.",
+            Combined:"Combines the Regular and Further Maths programmes to provide broader pure and applied mathematical preparation.",
+            TOP:"Represents pathways with substantial pure and applied mathematics, supporting mathematically intensive university study.",
+            MED:"Represents broad academic preparation for degree choices that require sound mathematical reasoning without the full Further Maths emphasis.",
+            Other:"Represents university routes that accept AS-level mathematics; exact entry requirements vary by institution and programme."
+        };
+        const svg = document.getElementById("connections");
+        const courses = [...document.querySelectorAll(".course")];
+        const status = document.getElementById("status");
+        const drawer = document.getElementById("drawer");
+        function drawConnections() {
+            svg.querySelectorAll(".edge").forEach(edge => edge.remove());
+            edges.forEach(([fromId,toId,optional]) => {
+                const from=document.getElementById(fromId), to=document.getElementById(toId);
+                const x1=from.offsetLeft+from.offsetWidth, y1=from.offsetTop+from.offsetHeight/2, x2=to.offsetLeft;
+                const y2=fromId==="G12_Regular"&&toId==="MED"?to.offsetTop+20:to.offsetTop+to.offsetHeight/2;
+                const bend=Math.max(30,Math.abs(x2-x1)*.42);
+                const path=document.createElementNS("http://www.w3.org/2000/svg","path");
+                path.setAttribute("d",`M ${x1} ${y1} C ${x1+bend} ${y1}, ${x2-bend} ${y2}, ${x2} ${y2}`);
+                path.setAttribute("marker-end","url(#arrow)"); path.classList.add("edge"); if(optional) path.classList.add("optional");
+                path.dataset.from=fromId; path.dataset.to=toId; svg.appendChild(path);
+            });
+        }
+        function applyHighlight(activeIds,message) {
+            const active=new Set(activeIds);
+            courses.forEach(course => course.classList.toggle("dimmed",!active.has(course.id)));
+            svg.querySelectorAll(".edge").forEach(edge => {
+                const visible=active.has(edge.dataset.from)&&active.has(edge.dataset.to);
+                edge.classList.toggle("dimmed",!visible); edge.classList.toggle("highlighted",visible);
+                edge.setAttribute("marker-end",visible?"url(#arrow-active)":"url(#arrow)");
+            });
+            status.textContent=message;
+        }
+        function closeDetails() {
+            courses.forEach(course=>course.classList.remove("selected"));
+            drawer.classList.remove("open"); drawer.setAttribute("aria-hidden","true"); drawer.setAttribute("inert","");
+        }
+        function resetChart() {
+            document.querySelectorAll(".filter").forEach(button=>button.classList.toggle("active",button.dataset.filter==="all"));
+            courses.forEach(course => course.classList.remove("dimmed","selected"));
+            svg.querySelectorAll(".edge").forEach(edge => { edge.classList.remove("dimmed","highlighted"); edge.setAttribute("marker-end","url(#arrow)"); });
+            status.textContent="Showing all pathways. Select a course to trace its connections.";
+            closeDetails();
+        }
+        function traceRoute(startId) {
+            const found=new Set([startId]);
+            const upstream=[startId], downstream=[startId];
+            while(upstream.length) {
+                const current=upstream.shift();
+                edges.filter(([,to])=>to===current).forEach(([from])=>{ if(!found.has(from)) { found.add(from); upstream.push(from); } });
+            }
+            while(downstream.length) {
+                const current=downstream.shift();
+                edges.filter(([from])=>from===current).forEach(([,to])=>{ if(!found.has(to)) { found.add(to); downstream.push(to); } });
+            }
+            return [...found];
+        }
+        function routeForCourse(course) {
+            if(course.id==="G11_Regular"||course.id==="G12_Regular") {
+                return traceRoute(course.id).filter(id=>id!=="Combined"&&id!=="TOP");
+            }
+            return course.dataset.track==="further"?routes.further:traceRoute(course.id);
+        }
+        function showDetails(course) {
+            const title=course.querySelector(".course-title").textContent;
+            document.getElementById("drawer-kicker").textContent=course.dataset.grade;
+            document.getElementById("drawer-title").textContent=title;
+            document.getElementById("drawer-label").textContent=course.dataset.track==="outcome"?"Pathway context":"Teaching focus";
+            document.getElementById("drawer-copy").textContent=teachingContent[course.id];
+            drawer.classList.add("open"); drawer.setAttribute("aria-hidden","false"); drawer.removeAttribute("inert");
+        }
+        document.querySelectorAll(".filter").forEach(button => button.addEventListener("click",() => {
+            document.querySelectorAll(".filter").forEach(item=>item.classList.toggle("active",item===button));
+            closeDetails();
+            if(button.dataset.filter==="all") { resetChart(); return; }
+            applyHighlight(routes[button.dataset.filter],`Showing the ${button.textContent.trim()} pathway. Dashed connections indicate optional enrollment requiring a placement test.`);
+        }));
+        courses.forEach(course => course.addEventListener("click",() => {
+            courses.forEach(item=>item.classList.toggle("selected",item===course));
+            const activeIds=routeForCourse(course);
+            applyHighlight(activeIds,course.dataset.track==="further"?"Showing Regular + Further Maths, a combined pathway starting in Grade 11.":`Tracing the routes into and out of ${course.querySelector(".course-title").textContent}.`); showDetails(course);
+        }));
+        document.getElementById("drawer-close").addEventListener("click",resetChart);
+        document.addEventListener("click",event => {
+            if(drawer.classList.contains("open")&&!event.target.closest("#drawer,.course")) closeDetails();
+        });
+        document.getElementById("print-chart").addEventListener("click",()=>window.print());
+        window.addEventListener("resize",drawConnections); window.addEventListener("load",drawConnections); drawConnections();
+    </script>
+</body>
+</html>
