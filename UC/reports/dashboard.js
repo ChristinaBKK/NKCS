@@ -281,8 +281,8 @@ function renderFilters() {
   const schools = getUniqueValues("school").length ? getUniqueValues("school") : getUniqueValues("account_name");
   renderFilterList("filterSchool", schools, FILTER_STATE.school, "school");
 
-  // 课程
-  const currs = getUniqueValues("curriculum").filter(Boolean);
+  // 课程（IGCSE 是考试/标化，不是课程体系，过滤掉）
+  const currs = getUniqueValues("curriculum").filter(Boolean).filter(c => c !== "IGCSE");
   renderFilterChips("filterCurriculum", currs, FILTER_STATE.curriculum);
 
   // 录取国家
@@ -392,10 +392,11 @@ function renderCharts() {
   }));
   renderPieChart("chartCountries", countryCount, ["#1d4ed8", "#f59e0b", "#0ea5e9", "#10b981", "#8b5cf6", "#ec4899", "#f43f5e", "#06b6d4"]);
 
-  // 课程分布
+  // 课程分布（IGCSE 是考试不是课程，过滤掉）
   const currCount = {};
   FILTERED.forEach((c) => {
     const k = c.curriculum || "Other";
+    if (k === "IGCSE") return;
     currCount[k] = (currCount[k] || 0) + 1;
   });
   renderBarChart("chartCurriculum", currCount, ["#1d4ed8", "#f59e0b", "#10b981", "#8b5cf6", "#ec4899"]);
@@ -551,7 +552,7 @@ function caseCardHTML(c) {
       </div>
       <div class="case-school">${escapeHTML(c.school || c.account_name || "—")}</div>
       <div>
-        ${c.curriculum ? `<span class="case-tag case-tag-curriculum">${escapeHTML(c.curriculum)}</span>` : ""}
+        ${c.curriculum && c.curriculum !== "IGCSE" ? `<span class="case-tag case-tag-curriculum">${escapeHTML(c.curriculum)}</span>` : ""}
         ${c.article_purpose ? `<span class="case-tag case-tag-purpose">${escapeHTML(c.article_purpose)}</span>` : ""}
         ${c.grade ? `<span class="case-tag">${escapeHTML(c.grade)}</span>` : ""}
       </div>
