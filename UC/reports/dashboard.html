@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="zh" data-lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title data-i18n="pageTitle">国际学校案例分析 | Case Studies</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7/dist/umd/supabase.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="dashboard.css">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'Noto Sans SC', 'system-ui', 'sans-serif'],
+          },
+          colors: {
+            primary: {
+              50: '#eff6ff', 100: '#dbeafe', 200: '#bfdbfe', 300: '#93c5fd',
+              400: '#60a5fa', 500: '#3b82f6', 600: '#2563eb', 700: '#1d4ed8',
+              800: '#1e40af', 900: '#1e3a8a',
+            },
+            accent: {
+              50: '#fffbeb', 100: '#fef3c7', 200: '#fde68a', 300: '#fcd34d',
+              400: '#fbbf24', 500: '#f59e0b', 600: '#d97706',
+            }
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="font-sans bg-slate-50 text-slate-900 antialiased">
+
+  <!-- ============= 顶部导航 ============= -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-30 backdrop-blur-md bg-white/90">
+    <div class="max-w-[1600px] mx-auto px-6 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-lg bg-gradient-to-br from-primary-700 to-primary-500 flex items-center justify-center text-white font-bold text-sm">
+          案
+        </div>
+        <div>
+          <h1 class="text-base font-semibold text-slate-900 leading-tight" data-i18n="brandName">国际学校案例研究</h1>
+          <p class="text-xs text-slate-500 leading-tight" data-i18n="brandTagline">International School Case Studies</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <!-- 用户角色切换 -->
+        <div class="hidden md:flex items-center gap-1 mr-2 text-xs">
+          <span class="text-slate-500" data-i18n="viewAs">视角</span>
+          <select id="roleSelect" class="bg-slate-100 border-0 rounded-md px-2 py-1 text-xs text-slate-700 focus:ring-2 focus:ring-primary-500">
+            <option value="principal" data-i18n="rolePrincipal">校长</option>
+            <option value="counselor" data-i18n="roleCounselor">升学指导</option>
+            <option value="curriculum" data-i18n="roleCurriculum">课程研发</option>
+          </select>
+        </div>
+
+        <!-- 语言切换 -->
+        <button id="langToggle" class="px-3 py-1.5 text-xs font-medium rounded-md border border-slate-200 hover:bg-slate-50 transition">
+          <span class="lang-zh font-semibold text-primary-700">中</span>
+          <span class="mx-1 text-slate-300">|</span>
+          <span class="lang-en text-slate-500">EN</span>
+        </button>
+
+        <!-- 刷新 -->
+        <button id="refreshBtn" class="px-3 py-1.5 text-xs font-medium rounded-md border border-slate-200 hover:bg-slate-50 transition flex items-center gap-1.5">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+          </svg>
+          <span data-i18n="actionRefresh">刷新</span>
+        </button>
+
+        <span class="hidden md:inline text-xs text-slate-500 px-2" id="lastUpdate"></span>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-[1600px] mx-auto px-6 py-6">
+    <div class="grid grid-cols-12 gap-6">
+
+      <!-- ============= 左侧筛选 ============= -->
+      <aside class="col-span-12 lg:col-span-3 xl:col-span-2">
+        <div class="bg-white rounded-xl border border-slate-200 p-5 sticky top-20 max-h-[calc(100vh-6rem)] overflow-y-auto">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-sm font-semibold text-slate-900" data-i18n="filterTitle">筛选</h3>
+            <button id="clearFilterBtn" class="text-xs text-slate-500 hover:text-primary-600" data-i18n="actionClear">清除</button>
+          </div>
+
+          <!-- 学校 -->
+          <div class="mb-5">
+            <div class="flex items-center justify-between mb-2">
+              <label class="text-xs font-medium text-slate-500 uppercase tracking-wider" data-i18n="filterSchool">学校</label>
+              <button class="filter-clear-btn" data-clear="school" title="清除学校筛选">✕</button>
+            </div>
+            <div id="filterSchool" class="space-y-1.5 max-h-48 overflow-y-auto"></div>
+          </div>
+
+          <!-- 课程 -->
+          <div class="mb-5">
+            <div class="flex items-center justify-between mb-2">
+              <label class="text-xs font-medium text-slate-500 uppercase tracking-wider" data-i18n="filterCurriculum">课程</label>
+              <button class="filter-clear-btn" data-clear="curriculum" title="清除课程筛选">✕</button>
+            </div>
+            <div id="filterCurriculum" class="flex flex-wrap gap-1.5"></div>
+          </div>
+
+          <!-- 录取国家 -->
+          <div class="mb-5">
+            <div class="flex items-center justify-between mb-2">
+              <label class="text-xs font-medium text-slate-500 uppercase tracking-wider" data-i18n="filterCountry">录取国家</label>
+              <button class="filter-clear-btn" data-clear="country" title="清除国家筛选">✕</button>
+            </div>
+            <div id="filterCountry" class="space-y-1.5 max-h-40 overflow-y-auto"></div>
+          </div>
+
+          <!-- 录取学校（搜索） -->
+          <div class="mb-5">
+            <div class="flex items-center justify-between mb-2">
+              <label class="text-xs font-medium text-slate-500 uppercase tracking-wider" data-i18n="filterAdmit">录取学校</label>
+              <button class="filter-clear-btn" data-clear="admit" title="清除录取院校筛选">✕</button>
+            </div>
+            <input id="filterAdmitSearch" type="search" placeholder="..." class="w-full text-xs px-2 py-1.5 border border-slate-200 rounded-md focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+            <div id="filterAdmit" class="mt-2 space-y-1.5 max-h-40 overflow-y-auto"></div>
+          </div>
+
+          <!-- 时间 -->
+          <div class="mb-5">
+            <div class="flex items-center justify-between mb-2">
+              <label class="text-xs font-medium text-slate-500 uppercase tracking-wider" data-i18n="filterTime">时间</label>
+              <button class="filter-clear-btn" data-clear="time" title="清除时间筛选">✕</button>
+            </div>
+            <select id="filterTime" class="w-full text-xs px-2 py-1.5 border border-slate-200 rounded-md">
+              <option value="all" data-i18n="timeAll">全部</option>
+              <option value="2026" data-i18n="time2026">2026</option>
+              <option value="2025" data-i18n="time2025">2025</option>
+              <option value="2024" data-i18n="time2024">2024</option>
+              <option value="2023" data-i18n="time2023">2023</option>
+            </select>
+          </div>
+
+          <!-- 保存我的筛选 -->
+          <div class="pt-4 border-t border-slate-200 space-y-2">
+            <button id="saveFilterBtn" class="w-full px-3 py-2 text-xs font-medium bg-primary-700 text-white rounded-md hover:bg-primary-800 transition" data-i18n="actionSaveFilter">💾 保存我的筛选</button>
+            <div id="savedFiltersList" class="space-y-1"></div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- ============= 主内容 ============= -->
+      <section class="col-span-12 lg:col-span-9 xl:col-span-10 space-y-6">
+
+        <!-- 顶部介绍 -->
+        <div class="bg-gradient-to-r from-primary-800 to-primary-600 rounded-xl p-6 text-white">
+          <h2 class="text-2xl font-bold mb-1" data-i18n="heroTitle">优秀学生案例</h2>
+          <p class="text-primary-100 text-sm" data-i18n="heroDesc">升学 + 学术 双视角 · 数据驱动的对标研究</p>
+        </div>
+
+        <!-- 统计卡片 -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div class="bg-white rounded-xl border border-slate-200 p-5">
+            <div class="text-xs font-medium text-slate-500 uppercase tracking-wider mb-2" data-i18n="statTotalCases">案例总数</div>
+            <div class="text-3xl font-bold text-slate-900" data-stat="total">—</div>
+            <div class="text-xs text-slate-500 mt-1" data-i18n="statTotalCasesDesc">全部已抽取</div>
+          </div>
+          <div class="bg-white rounded-xl border border-slate-200 p-5">
+            <div class="text-xs font-medium text-slate-500 uppercase tracking-wider mb-2" data-i18n="statSchools">覆盖学校</div>
+            <div class="text-3xl font-bold text-primary-700" data-stat="schools">—</div>
+            <div class="text-xs text-slate-500 mt-1" data-i18n="statSchoolsDesc">所含公众号</div>
+          </div>
+          <div class="bg-white rounded-xl border border-slate-200 p-5">
+            <div class="text-xs font-medium text-slate-500 uppercase tracking-wider mb-2" data-i18n="statCountries">录取国家</div>
+            <div class="text-3xl font-bold text-accent-600" data-stat="countries">—</div>
+            <div class="text-xs text-slate-500 mt-1" data-i18n="statCountriesDesc">覆盖国家/地区</div>
+          </div>
+          <div class="bg-white rounded-xl border border-slate-200 p-5">
+            <div class="text-xs font-medium text-slate-500 uppercase tracking-wider mb-2" data-i18n="statOxbridge">牛剑录取</div>
+            <div class="text-3xl font-bold text-primary-700" data-stat="oxbridge">—</div>
+            <div class="text-xs text-slate-500 mt-1" data-i18n="statOxbridgeDesc">牛津 + 剑桥</div>
+          </div>
+        </div>
+
+        <!-- 图表 -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div class="bg-white rounded-xl border border-slate-200 p-5">
+            <h3 class="text-sm font-semibold text-slate-900 mb-4" data-i18n="chartCountries">录取国家分布</h3>
+            <div class="h-64"><canvas id="chartCountries"></canvas></div>
+          </div>
+          <div class="bg-white rounded-xl border border-slate-200 p-5">
+            <h3 class="text-sm font-semibold text-slate-900 mb-4" data-i18n="chartCurriculum">课程体系分布</h3>
+            <div class="h-64"><canvas id="chartCurriculum"></canvas></div>
+          </div>
+        </div>
+        <div class="bg-white rounded-xl border border-slate-200 p-5">
+          <h3 class="text-sm font-semibold text-slate-900 mb-4" data-i18n="chartAdmit">录取学校 Top 10</h3>
+          <div class="h-72"><canvas id="chartAdmit"></canvas></div>
+        </div>
+
+        <!-- 案例列表 -->
+        <div>
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="text-lg font-semibold text-slate-900" data-i18n="casesTitle">学生案例</h2>
+            <span class="text-xs text-slate-500" id="casesCount"></span>
+          </div>
+          <div id="casesGrid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4"></div>
+        </div>
+
+      </section>
+    </div>
+  </main>
+
+  <!-- ============= 详情弹窗 ============= -->
+  <div id="caseModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm" onclick="if(event.target===this) closeModal()">
+    <div class="bg-white rounded-2xl max-w-3xl w-full max-h-[85vh] overflow-y-auto shadow-2xl" onclick="event.stopPropagation()">
+      <div class="sticky top-0 bg-white border-b border-slate-200 p-5 flex items-start justify-between z-10">
+        <div>
+          <h3 class="text-xl font-bold text-slate-900" id="modalName">—</h3>
+          <p class="text-sm text-slate-500 mt-1" id="modalSchool">—</p>
+        </div>
+        <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600 p-1">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+      <div class="p-6 space-y-5" id="modalContent"></div>
+    </div>
+  </div>
+
+  <!-- 加载状态 -->
+  <div id="loading" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-white/80 backdrop-blur-sm">
+    <div class="text-center">
+      <div class="inline-block w-8 h-8 border-2 border-primary-200 border-t-primary-700 rounded-full animate-spin"></div>
+      <p class="text-sm text-slate-600 mt-3" data-i18n="loading">加载中...</p>
+    </div>
+  </div>
+
+  <script src="dashboard.js"></script>
+</body>
+</html>

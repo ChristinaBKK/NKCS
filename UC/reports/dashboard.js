@@ -43,6 +43,8 @@ const I18N = {
     noDataHint: "试试调整筛选条件",
     loading: "加载中...",
     purpose: "类型",
+    curriculum: "课程",
+    confidence: "置信度",
     grade: "届",
     admitTo: "录取",
     major: "专业",
@@ -157,6 +159,135 @@ const SUPABASE_URL = "https://lrkmyzgmqcdllctbhxdd.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxya215emdtcWNkbGxjdGJoeGRkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUwODAzNTAsImV4cCI6MjEwMDY1NjM1MH0.0VkZgpOG0A5sFFoRtYR5LyCW26U3AlXwg0WuTqbH99M";
 // 避免与 window.supabase 全局变量冲突（supabase-js UMD 已经在 window.supabase 上挂载）
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// ============================================
+//  翻译字典（DB 值 → 英文）
+// ============================================
+const SCHOOLS_EN = {
+  "深圳国际交流学院（深国交）": "SCIE (Shenzhen College of International Education)",
+  "深国交": "SCIE (Shenzhen College of International Education)",
+  "上海赫贤学校": "Shanghai High School (He-Xian)",
+  "上海赫贤高中部": "Shanghai He-Xian High School",
+  "上海赫贤高中": "Shanghai He-Xian High School",
+  "包玉刚实验学校": "YK Pao School",
+  "FindingSchool": "FindingSchool",
+  "UWC中国": "UWC China",
+  "上海七宝德怀特": "Shanghai Qibao Dwight High School",
+  "上海包玉刚实验学校": "Shanghai YK Pao School",
+  "上海协和双语": "Shanghai Concord Bilingual School",
+  "上海平和双语学校": "Shanghai Pinghe School",
+  "上海惠灵顿国际学校": "Wellington College International Shanghai",
+  "上海星河湾双语学校": "Shanghai Starriver Bilingual School",
+  "上海耀华古北": "Yaohua International School Shanghai Gubei",
+  "上海耀华国际教育古北校区": "Yaohua International School Shanghai Gubei",
+  "上海耀中浦东校区": "Yew Chung International School Shanghai Pudong",
+  "上海耀中国际教育学校古北校区": "Yaohua International School Shanghai Gubei",
+  "上海七宝德怀特高级中学": "Shanghai Qibao Dwight High School",
+  "加藤国际教育": "Kato International Education",
+  "北京世青国际学校": "Beijing World Youth Academy",
+  "北京世青学校（BWYA）": "Beijing World Youth Academy",
+  "北京十一学校一分校国际部": "Beijing No.11 School International Dept.",
+  "北京海淀凯文学校": "Beijing Haidian Kevin School",
+  "北京鼎石学校": "Keystone Academy Beijing",
+  "南京外国语学校中英项目": "Nanjing Foreign Language School (Sino-British)",
+  "南京外国语学校": "Nanjing Foreign Language School",
+  "哈罗Harrow": "Harrow",
+  "唯寻国际教育": "Weixun International Education",
+  "宜校": "YiSchool",
+  "广州贝赛思": "BASIS International School Guangzhou",
+  "德威Dulwich": "Dulwich College",
+  "新加坡伊顿": "EtonHouse International School Singapore",
+  "枫叶教育": "Maple Leaf Educational Systems",
+  "棕榈大道": "Palm Avenue International School",
+  "深圳中学国际部": "Shenzhen Middle School International Department",
+  "深圳国际交流学院": "Shenzhen College of International Education",
+  "深圳贝赛思": "BASIS International School Shenzhen",
+  "爸爸真棒": "DadGood",
+  "翰林国际教育": "Hanlin International Education",
+  "耀中耀华YCYW": "YCYW (Yew Chung Yew Wah)",
+  "诺德安达": "Nord Anglia Education",
+  "贝赛思BASIS": "BASIS International School",
+  "重庆德普外国语学校": "Chongqing Depu Foreign Language School",
+  "顶思": "Topschool",
+};
+const COUNTRIES_EN = {
+  "美国": "United States",
+  "英国": "United Kingdom",
+  "中国香港": "Hong Kong SAR, China",
+  "澳大利亚": "Australia",
+  "意大利": "Italy",
+  "新加坡": "Singapore",
+  "瑞士": "Switzerland",
+  "韩国": "South Korea",
+  "加拿大": "Canada",
+  "中国": "China",
+  "日本": "Japan",
+};
+const UNIVERSITIES_EN = {
+  "东北大学": "Northeastern University",
+  "伊利诺伊大学厄巴纳-香槟分校": "University of Illinois Urbana-Champaign",
+  "伦敦政治经济学院": "London School of Economics and Political Science",
+  "伦敦时装学院": "London College of Fashion",
+  "佐治亚理工学院": "Georgia Institute of Technology",
+  "剑桥大学": "University of Cambridge",
+  "加州大学圣地亚哥分校": "University of California, San Diego",
+  "加州大学圣塔芭芭拉分校": "University of California, Santa Barbara",
+  "加州大学圣巴巴拉分校": "University of California, Santa Barbara",
+  "加州大学戴维斯分校": "University of California, Davis",
+  "加州大学欧文分校": "University of California, Irvine",
+  "加州大学洛杉矶分校": "University of California, Los Angeles",
+  "华盛顿大学": "University of Washington",
+  "卡尔顿学院": "Carleton College",
+  "威斯康星大学麦迪逊分校": "University of Wisconsin-Madison",
+  "密歇根大学安娜堡分校": "University of Michigan, Ann Arbor",
+  "帝国理工学院": "Imperial College London",
+  "温布尔登学院": "Wimbledon College of Arts",
+  "爱丁堡大学": "University of Edinburgh",
+  "牛津大学": "University of Oxford",
+  "纽约大学": "New York University",
+  "芝加哥大学": "University of Chicago",
+  "西北大学": "Northwestern University",
+  "金斯顿大学": "Kingston University",
+  "香港大学": "The University of Hong Kong",
+  "香港大学李嘉诚医学院": "HKU Li Ka Shing Faculty of Medicine",
+  "香港科技大学": "The Hong Kong University of Science and Technology",
+  "香港理工大学": "The Hong Kong Polytechnic University",
+  "南加利福尼亚大学": "University of Southern California",
+  "艺术中心设计学院": "ArtCenter College of Design",
+  "萨凡纳艺术与设计学院": "Savannah College of Art and Design",
+  "伯恩茅斯大学": "Bournemouth University",
+  "提赛德大学": "Teesside University",
+  "波士顿大学": "Boston University",
+  "伦敦大学科陶德艺术学院": "University of the Arts London (Camberwell)",
+  "伦敦艺术大学": "University of the Arts London",
+  "纽约视觉艺术学院": "School of Visual Arts (New York)",
+  "加州艺术学院": "California Institute of the Arts",
+};
+const PURPOSES_EN = {
+  "录取喜报": "Admission Announcement",
+  "成长故事": "Growth Story",
+  "经验分享": "Experience Sharing",
+  "学习方法": "Study Method",
+};
+const CURRICULUMS_EN = {
+  "IB": "IB (International Baccalaureate)",
+  "AP": "AP (Advanced Placement)",
+  "A-Level": "A-Level",
+  "BC": "BC (British Columbia)",
+  "Mixed": "Mixed",
+  "Other": "Other",
+  "IGCSE": "IGCSE",  // 兜底（不应作为课程，但万一出现仍翻译）
+};
+
+const tr = (cn, dict) => (currentLang === "en" && cn && dict[cn]) ? dict[cn] : cn;
+const trSchool = (cn) => tr(cn, SCHOOLS_EN);
+const trCountry = (cn) => tr(cn, COUNTRIES_EN);
+const trUniv = (cn) => tr(cn, UNIVERSITIES_EN);
+const trPurpose = (cn) => tr(cn, PURPOSES_EN);
+const trCurr = (cn) => tr(cn, CURRICULUMS_EN);
+const trSchoolList = (arr) => (arr || []).map(trSchool).join(", ");
+const trCountryList = (arr) => (arr || []).map(trCountry).join(", ");
+const trUnivList = (arr) => (arr || []).map(trUniv).join(", ");
 
 // ============================================
 //  全局状态
@@ -279,21 +410,21 @@ function getUniqueValues(field) {
 function renderFilters() {
   // 学校
   const schools = getUniqueValues("school").length ? getUniqueValues("school") : getUniqueValues("account_name");
-  renderFilterList("filterSchool", schools, FILTER_STATE.school, "school");
+  renderFilterList("filterSchool", schools, FILTER_STATE.school, "school", trSchool);
 
   // 课程（IGCSE 是考试/标化，不是课程体系，过滤掉）
   const currs = getUniqueValues("curriculum").filter(Boolean).filter(c => c !== "IGCSE");
   renderFilterChips("filterCurriculum", currs, FILTER_STATE.curriculum);
 
   // 录取国家
-  renderFilterList("filterCountry", getUniqueValues("admit_country"), FILTER_STATE.country, "country");
+  renderFilterList("filterCountry", getUniqueValues("admit_country"), FILTER_STATE.country, "country", trCountry);
 
   // 录取学校（带搜索）
   const admits = getUniqueValues("admit_schools");
-  renderFilterList("filterAdmit", admits, FILTER_STATE.admit, "admit", "filterAdmitSearch");
+  renderFilterList("filterAdmit", admits, FILTER_STATE.admit, "admit", trUniv, "filterAdmitSearch");
 }
 
-function renderFilterList(elId, items, selectedSet, filterKey, searchId) {
+function renderFilterList(elId, items, selectedSet, filterKey, translateFn, searchId) {
   const el = document.getElementById(elId);
   if (!el) return;
   el.innerHTML = "";
@@ -308,7 +439,7 @@ function renderFilterList(elId, items, selectedSet, filterKey, searchId) {
     div.dataset.filter = filterKey;
     div.innerHTML = `
       <input type="checkbox" ${selectedSet.has(item) ? "checked" : ""}>
-      <span class="truncate">${escapeHTML(item)}</span>
+      <span class="truncate">${escapeHTML(translateFn ? translateFn(item) : item)}</span>
     `;
     div.addEventListener("click", () => toggleFilter(filterKey, item));
     el.appendChild(div);
@@ -322,7 +453,7 @@ function renderFilterChips(elId, items, selectedSet) {
   items.forEach((item) => {
     const div = document.createElement("div");
     div.className = "chip" + (selectedSet.has(item) ? " active" : "");
-    div.textContent = item;
+    div.textContent = trCurr(item);
     div.addEventListener("click", () => toggleFilter("curriculum", item));
     el.appendChild(div);
   });
@@ -342,6 +473,29 @@ function clearFilter() {
   FILTER_STATE.admit.clear();
   FILTER_STATE.time = "all";
   document.getElementById("filterTime").value = "all";
+  // 清空 admit 搜索
+  const admitSearch = document.getElementById("filterAdmitSearch");
+  if (admitSearch) admitSearch.value = "";
+  applyFilter();
+  renderFilters();
+}
+
+// 清除单个 filter（点击 label 旁的 ✕）
+function clearSingleFilter(key) {
+  if (key === "school")      FILTER_STATE.school.clear();
+  else if (key === "curriculum") FILTER_STATE.curriculum.clear();
+  else if (key === "country")    FILTER_STATE.country.clear();
+  else if (key === "admit")      FILTER_STATE.admit.clear();
+  else if (key === "time") {
+    FILTER_STATE.time = "all";
+    const sel = document.getElementById("filterTime");
+    if (sel) sel.value = "all";
+  }
+  // admit 搜索框也清空
+  if (key === "admit") {
+    const admitSearch = document.getElementById("filterAdmitSearch");
+    if (admitSearch) admitSearch.value = "";
+  }
   applyFilter();
   renderFilters();
 }
@@ -550,15 +704,15 @@ function caseCardHTML(c) {
           ${escapeHTML(c.student_alias || "—")}
         </a>
       </div>
-      <div class="case-school">${escapeHTML(c.school || c.account_name || "—")}</div>
+      <div class="case-school">${escapeHTML(trSchool(c.school || c.account_name || "—"))}</div>
       <div>
-        ${c.curriculum && c.curriculum !== "IGCSE" ? `<span class="case-tag case-tag-curriculum">${escapeHTML(c.curriculum)}</span>` : ""}
-        ${c.article_purpose ? `<span class="case-tag case-tag-purpose">${escapeHTML(c.article_purpose)}</span>` : ""}
+        ${c.curriculum && c.curriculum !== "IGCSE" ? `<span class="case-tag case-tag-curriculum">${escapeHTML(trCurr(c.curriculum))}</span>` : ""}
+        ${c.article_purpose ? `<span class="case-tag case-tag-purpose">${escapeHTML(trPurpose(c.article_purpose))}</span>` : ""}
         ${c.grade ? `<span class="case-tag">${escapeHTML(c.grade)}</span>` : ""}
       </div>
       <div class="case-admit">
-        <div class="case-admit-school">${countryFlag} ${escapeHTML(admit)}</div>
-        ${major ? `<div class="case-admit-country">${escapeHTML(major)} · ${escapeHTML(country)}</div>` : `<div class="case-admit-country">${escapeHTML(country)}</div>`}
+        <div class="case-admit-school">${countryFlag} ${escapeHTML(trUniv(admit))}</div>
+        ${major ? `<div class="case-admit-country">${escapeHTML(major)} · ${escapeHTML(trCountry(country))}</div>` : `<div class="case-admit-country">${escapeHTML(trCountry(country))}</div>`}
       </div>
       ${takeaways.length ? `
         <div class="case-takeaway">
@@ -597,7 +751,7 @@ function openModal(id) {
 
   document.getElementById("modalName").textContent = c.student_alias || "—";
   document.getElementById("modalSchool").textContent =
-    [c.school || c.account_name, c.curriculum, c.grade].filter(Boolean).join(" · ");
+    [trSchool(c.school || c.account_name || ""), trCurr(c.curriculum), c.grade].filter(Boolean).join(" · ");
 
   const conf = Math.round((c.confidence_score || 0) * 100);
   const ts = c.test_scores || {};
@@ -617,16 +771,16 @@ function openModal(id) {
     <div class="modal-section">
       <div class="modal-section-title">${t("admitTo")}</div>
       <div class="case-admit" style="margin-top:0">
-        <div class="case-admit-school">${flagOf((c.admit_country || [])[0] || "")} ${escapeHTML((c.admit_schools || []).join("、") || "—")}</div>
-        <div class="case-admit-country">${escapeHTML((c.admit_majors || []).join("、"))} · ${escapeHTML((c.admit_country || []).join("、"))}</div>
+        <div class="case-admit-school">${flagOf((c.admit_country || [])[0] || "")} ${escapeHTML(trUnivList(c.admit_schools) || "—")}</div>
+        <div class="case-admit-country">${escapeHTML((c.admit_majors || []).join("、"))} · ${escapeHTML(trCountryList(c.admit_country))}</div>
       </div>
     </div>
 
     <div class="modal-section">
       <div class="modal-section-title">${t("statTotalCases")} · ${t("purpose")} · ${t("grade")}</div>
       <div class="modal-key-value">
-        <span class="modal-key">${t("statTotalCases")}</span><span class="modal-value">${t("curriculum") ? "" : ""}${escapeHTML(c.curriculum || "—")}</span>
-        <span class="modal-key">${t("purpose")}</span><span class="modal-value">${escapeHTML(c.article_purpose || "—")}</span>
+        <span class="modal-key">${t("curriculum") || "Curriculum"}</span><span class="modal-value">${escapeHTML(trCurr(c.curriculum) || "—")}</span>
+        <span class="modal-key">${t("purpose")}</span><span class="modal-value">${escapeHTML(trPurpose(c.article_purpose) || "—")}</span>
         <span class="modal-key">${t("grade")}</span><span class="modal-value">${escapeHTML(c.grade || "—")}</span>
         <span class="modal-key">GPA</span><span class="modal-value">${escapeHTML(c.gpa || "—")}</span>
         <span class="modal-key">AI ${t("confidence") || "置信度"}</span><span class="modal-value">${conf}%</span>
@@ -775,6 +929,10 @@ async function init() {
   document.getElementById("roleSelect").addEventListener("change", (e) => {
     currentRole = e.target.value;
     localStorage.setItem("role", currentRole);
+  });
+  // 每个 filter 的独立清除按钮
+  document.querySelectorAll(".filter-clear-btn").forEach(btn => {
+    btn.addEventListener("click", () => clearSingleFilter(btn.dataset.clear));
   });
   // ESC 关闭弹窗
   document.addEventListener("keydown", (e) => {

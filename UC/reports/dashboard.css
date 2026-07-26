@@ -18,6 +18,31 @@ body {
 ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
+/* ============== Filter: clear single filter button ============== */
+.filter-clear-btn {
+  font-size: 11px;
+  color: #94a3b8;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: all 0.15s;
+  line-height: 1;
+}
+.filter-clear-btn:hover {
+  background: #fef2f2;
+  color: #ef4444;
+}
+.filter-clear-btn:disabled {
+  color: #cbd5e1;
+  cursor: not-allowed;
+}
+.filter-clear-btn:disabled:hover {
+  background: transparent;
+  color: #cbd5e1;
+}
+
 /* ============== Filter: checkbox & chip ============== */
 .filter-item {
   display: flex;
