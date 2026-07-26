@@ -93,32 +93,47 @@
 
           <!-- 学校 -->
           <div class="mb-5">
-            <label class="text-xs font-medium text-slate-500 uppercase tracking-wider mb-2 block" data-i18n="filterSchool">学校</label>
+            <div class="flex items-center justify-between mb-2">
+              <label class="text-xs font-medium text-slate-500 uppercase tracking-wider" data-i18n="filterSchool">学校</label>
+              <button class="filter-clear-btn" data-clear="school" title="清除该筛选">✕</button>
+            </div>
             <div id="filterSchool" class="space-y-1.5 max-h-48 overflow-y-auto"></div>
           </div>
 
           <!-- 课程 -->
           <div class="mb-5">
-            <label class="text-xs font-medium text-slate-500 uppercase tracking-wider mb-2 block" data-i18n="filterCurriculum">课程</label>
+            <div class="flex items-center justify-between mb-2">
+              <label class="text-xs font-medium text-slate-500 uppercase tracking-wider" data-i18n="filterCurriculum">课程</label>
+              <button class="filter-clear-btn" data-clear="curriculum" title="清除该筛选">✕</button>
+            </div>
             <div id="filterCurriculum" class="flex flex-wrap gap-1.5"></div>
           </div>
 
           <!-- 录取国家 -->
           <div class="mb-5">
-            <label class="text-xs font-medium text-slate-500 uppercase tracking-wider mb-2 block" data-i18n="filterCountry">录取国家</label>
+            <div class="flex items-center justify-between mb-2">
+              <label class="text-xs font-medium text-slate-500 uppercase tracking-wider" data-i18n="filterCountry">录取国家</label>
+              <button class="filter-clear-btn" data-clear="country" title="清除该筛选">✕</button>
+            </div>
             <div id="filterCountry" class="space-y-1.5 max-h-40 overflow-y-auto"></div>
           </div>
 
           <!-- 录取学校（搜索） -->
           <div class="mb-5">
-            <label class="text-xs font-medium text-slate-500 uppercase tracking-wider mb-2 block" data-i18n="filterAdmit">录取学校</label>
+            <div class="flex items-center justify-between mb-2">
+              <label class="text-xs font-medium text-slate-500 uppercase tracking-wider" data-i18n="filterAdmit">录取学校</label>
+              <button class="filter-clear-btn" data-clear="admit" title="清除该筛选">✕</button>
+            </div>
             <input id="filterAdmitSearch" type="search" placeholder="..." class="w-full text-xs px-2 py-1.5 border border-slate-200 rounded-md focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
             <div id="filterAdmit" class="mt-2 space-y-1.5 max-h-40 overflow-y-auto"></div>
           </div>
 
           <!-- 时间 -->
           <div class="mb-5">
-            <label class="text-xs font-medium text-slate-500 uppercase tracking-wider mb-2 block" data-i18n="filterTime">时间</label>
+            <div class="flex items-center justify-between mb-2">
+              <label class="text-xs font-medium text-slate-500 uppercase tracking-wider" data-i18n="filterTime">时间</label>
+              <button class="filter-clear-btn" data-clear="time" title="清除该筛选">✕</button>
+            </div>
             <select id="filterTime" class="w-full text-xs px-2 py-1.5 border border-slate-200 rounded-md">
               <option value="all" data-i18n="timeAll">全部</option>
               <option value="2026" data-i18n="time2026">2026</option>
