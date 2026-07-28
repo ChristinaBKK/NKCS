@@ -424,21 +424,41 @@ async function loadData() {
   document.getElementById("loading").classList.remove("hidden");
   try {
     // v_recent_cases 视图已经 join 了 articles 和 accounts
-    const { data, error } = await sb
-      .from("v_recent_cases")
-      .select("*")
-      .order("published_at", { ascending: false });
-    if (error) throw error;
+    // PostgREST 默认 limit 1000，必须分页拉全
+    const PAGE = 1000;
+    let allData = [];
+    let from = 0;
+    while (true) {
+      const { data, error } = await sb
+        .from("v_recent_cases")
+        .select("*")
+        .order("published_at", { ascending: false })
+        .range(from, from + PAGE - 1);
+      if (error) throw error;
+      if (!data || data.length === 0) break;
+      allData = allData.concat(data);
+      if (data.length < PAGE) break;
+      from += PAGE;
+    }
 
     // 兜底：如果视图为空或权限问题，从 student_cases 取
-    if (!data || data.length === 0) {
-      const { data: cases } = await sb
-        .from("student_cases")
-        .select("*, articles!inner(title, published_at, account_id, accounts(name, region))")
-        .order("created_at", { ascending: false });
-      ALL_CASES = (cases || []).map(normalizeCase).filter(Boolean);
+    if (!allData || allData.length === 0) {
+      let allCases = [];
+      let cf = 0;
+      while (true) {
+        const { data: cases } = await sb
+          .from("student_cases")
+          .select("*, articles!inner(title, published_at, account_id, accounts(name, region))")
+          .order("created_at", { ascending: false })
+          .range(cf, cf + PAGE - 1);
+        if (!cases || cases.length === 0) break;
+        allCases = allCases.concat(cases);
+        if (cases.length < PAGE) break;
+        cf += PAGE;
+      }
+      ALL_CASES = allCases.map(normalizeCase).filter(Boolean);
     } else {
-      ALL_CASES = data.map(normalizeCase).filter(Boolean);
+      ALL_CASES = allData.map(normalizeCase).filter(Boolean);
     }
 
     document.getElementById("lastUpdate").textContent =
