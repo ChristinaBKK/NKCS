@@ -1962,16 +1962,23 @@ const CURRICULUMS_EN = {
 };
 
 const tr = (cn, dict) => (currentLang === "en" && cn && dict[cn]) ? dict[cn] : cn;
-const trSchool = (cn) => tr(cn, SCHOOLS_EN);
-const trCountry = (cn) => tr(cn, COUNTRIES_EN);
-const trUniv = (cn) => tr(cn, UNIVERSITIES_EN);
-const trPurpose = (cn) => tr(cn, PURPOSES_EN);
+// _en-aware: 优先用 LLM 翻译的 _en 字段，fallback 到字典，最后返回中文
+const trEnOrDict = (cn, enVal, dict) => {
+  if (currentLang !== "en") return cn;
+  if (enVal) return enVal;
+  if (cn && dict[cn]) return dict[cn];
+  return cn;
+};
+const trSchool = (cn, en) => trEnOrDict(cn, en, SCHOOLS_EN);
+const trCountry = (cn, en) => trEnOrDict(cn, en, COUNTRIES_EN);
+const trUniv = (cn, en) => trEnOrDict(cn, en, UNIVERSITIES_EN);
+const trPurpose = (cn, en) => trEnOrDict(cn, en, PURPOSES_EN);
 const trCurr = (cn) => tr(cn, CURRICULUMS_EN);
-const trMajor = (cn) => tr(cn, MAJORS_EN);
-const trSchoolList = (arr) => (arr || []).map(trSchool).join(", ");
-const trCountryList = (arr) => (arr || []).map(trCountry).join(", ");
-const trUnivList = (arr) => (arr || []).map(trUniv).join(", ");
-const trMajorList = (arr) => (arr || []).map(trMajor).join(", ");
+const trMajor = (cn, en) => trEnOrDict(cn, en, MAJORS_EN);
+const trSchoolList = (arr, enArr) => (arr || []).map((x, i) => trSchool(x, enArr?.[i])).join(", ");
+const trCountryList = (arr, enArr) => (arr || []).map((x, i) => trCountry(x, enArr?.[i])).join(", ");
+const trUnivList = (arr, enArr) => (arr || []).map((x, i) => trUniv(x, enArr?.[i])).join(", ");
+const trMajorList = (arr, enArr) => (arr || []).map((x, i) => trMajor(x, enArr?.[i])).join(", ");
 
 // ============================================
 //  全局状态
@@ -2004,23 +2011,42 @@ const NON_UNDERGRAD_KEYWORDS = [
   '毕业生', '已毕业',
 ];
 
+// 规范化 grade 值到 6 类：G9/G10/G11/G12/G13/Graduate/Prep-Senior/Prep-Junior
+function normalizeGrade(grade) {
+  if (!grade) return null;
+  const g = grade.trim();
+  // 已是规范值
+  if (/^(G\s*9|G\s*10|G\s*11|G\s*12|G\s*13|Graduate|Prep-Senior|Prep-Junior)$/i.test(g)) {
+    return g.replace(/\s+/g, '');
+  }
+  // 中文写法
+  if (g.includes('9年级') || g.includes('9 年级') || g === '初三') return 'G9';
+  if (g.includes('10年级') || g.includes('10 年级') || g === '高一') return 'G10';
+  if (g.includes('11年级') || g.includes('11 年级') || g === '高二') return 'G11';
+  if (g.includes('12年级') || g.includes('12 年级') || g === '高三') return 'G12';
+  if (g.includes('13年级') || g.includes('13 年级')) return 'G13';
+  if (/本科毕业|已毕业|毕业生|届毕业生|Master|硕士|PhD|博士|研究生|申请硕士/.test(g)) return 'Graduate';
+  if (/Class of 20\d\d|202\d届|2026届/.test(g)) return 'Graduate';
+  return g;  // 兜底
+}
+
 function getApplicationLevel(c) {
-  // grade 字段最先判断
-  const grade = (c.grade || '').trim();
-  const text = grade + ' ' + (c.article_purpose || '') + ' ' + (c.key_takeaways || []).join(' ');
+  // 优先用规范化后的 grade
+  const gradeNorm = normalizeGrade(c.grade) || '';
+  const text = (c.grade || '') + ' ' + (c.article_purpose || '') + ' ' + (c.key_takeaways || []).join(' ') + ' ' + (c.key_takeaways_en || []).join(' ');
 
-  if (!grade && !c.admit_schools?.length) return 'unknown';
+  if (!c.grade && !c.admit_schools?.length) return 'unknown';
 
-  // 高中申请：G9/G10/G11/9年级/10年级/11年级
-  if (/^(G\s*9|G\s*10|G\s*11|9\s*年级|10\s*年级|11\s*年级|9年级|10年级|11年级|高一|高二)$/i.test(grade)) {
+  // 高中申请：G9-G11
+  if (/^(G9|G10|G11)$/i.test(gradeNorm)) {
     return 'highschool';
   }
-  if (/美高|高中申请|美高申请|国际高中.*G10|国际高中.*G9|国际高中.*G11/.test(text)) {
+  if (/美高|高中申请|美高申请|国际高中.*G(10|9|11)|Prep-Junior|Prep-Senior/i.test(text)) {
     return 'highschool';
   }
 
   // 研究生
-  if (/硕士|研究生|申请硕士|PhD|博士|Master|Master's/.test(text) || /本科毕业|已毕业|届毕业生|Class of 20\d\d/.test(text)) {
+  if (gradeNorm === 'Graduate' || /硕士|研究生|申请硕士|PhD|博士|Master|Master's|本科毕业|已毕业|届毕业生|Class of 20\d\d/i.test(text)) {
     return 'graduate';
   }
 
@@ -2087,17 +2113,28 @@ function normalizeCase(row) {
   return {
     id: row.id || row.case_id,
     student_alias: row.student_alias,
+    student_alias_en: row.student_alias_en,
     school: row.school,
+    school_en: row.school_en,
     curriculum: row.curriculum,
     grade: row.grade,
+    grade_en: row.grade_en,
     admit_country: row.admit_country || [],
+    admit_country_en: row.admit_country_en || [],
     admit_schools: row.admit_schools || [],
+    admit_schools_en: row.admit_schools_en || [],
     admit_majors: row.admit_majors || [],
+    admit_majors_en: row.admit_majors_en || [],
     gpa: row.gpa,
+    gpa_en: row.gpa_en,
     test_scores: row.test_scores || {},
+    test_scores_en: row.test_scores_en || {},
     activities: row.activities || [],
+    activities_en: row.activities_en || [],
     key_takeaways: row.key_takeaways || [],
+    key_takeaways_en: row.key_takeaways_en || [],
     article_purpose: row.article_purpose,
+    article_purpose_en: row.article_purpose_en,
     is_arts: row.is_arts || false,
     confidence_score: row.confidence_score,
     needs_human_review: row.needs_human_review,
@@ -2451,10 +2488,13 @@ function renderCases() {
 
 function caseCardHTML(c) {
   const country = (c.admit_country || [])[0] || "";
+  const countryEn = (c.admit_country_en || [])[0] || "";
   const countryFlag = flagOf(country);
   const admit = (c.admit_schools || [])[0] || "—";
+  const admitEn = (c.admit_schools_en || [])[0] || "";
   const major = (c.admit_majors || [])[0] || "";
-  const takeaways = (c.key_takeaways || []).slice(0, 2);
+  const majorEn = (c.admit_majors_en || [])[0] || "";
+  const takeaways = currentLang === "en" && c.key_takeaways_en?.length ? c.key_takeaways_en.slice(0, 2) : (c.key_takeaways || []).slice(0, 2);
   const conf = Math.round((c.confidence_score || 0) * 100);
   const confColor = conf >= 80 ? "text-emerald-600" : conf >= 60 ? "text-amber-600" : "text-slate-500";
 
@@ -2462,18 +2502,18 @@ function caseCardHTML(c) {
     <div class="case-card" data-id="${c.id}">
       <div class="case-name">
         <a href="${escapeHTML(c.article_url || '#')}" target="_blank" rel="noopener" class="case-name-link" onclick="event.stopPropagation()" title="${escapeHTML(c.article_title || '')}">
-          ${escapeHTML(c.student_alias || "—")}
+          ${escapeHTML(currentLang === "en" && c.student_alias_en ? c.student_alias_en : (c.student_alias || "—"))}
         </a>
       </div>
-      <div class="case-school">${escapeHTML(trSchool(c.school || c.account_name || "—"))}</div>
+      <div class="case-school">${escapeHTML(trSchool(c.school || c.account_name || "—", c.school_en))}</div>
       <div>
         ${c.curriculum && c.curriculum !== "IGCSE" ? `<span class="case-tag case-tag-curriculum">${escapeHTML(trCurr(c.curriculum))}</span>` : ""}
-        ${c.article_purpose ? `<span class="case-tag case-tag-purpose">${escapeHTML(trPurpose(c.article_purpose))}</span>` : ""}
-        ${c.grade ? `<span class="case-tag">${escapeHTML(c.grade)}</span>` : ""}
+        ${c.article_purpose ? `<span class="case-tag case-tag-purpose">${escapeHTML(trPurpose(c.article_purpose, c.article_purpose_en))}</span>` : ""}
+        ${c.grade ? `<span class="case-tag">${escapeHTML(currentLang === "en" && c.grade_en ? c.grade_en : c.grade)}</span>` : ""}
       </div>
       <div class="case-admit">
-        <div class="case-admit-school">${countryFlag} ${escapeHTML(trUniv(admit))}</div>
-        ${major ? `<div class="case-admit-country">${escapeHTML(trMajor(major))} · ${escapeHTML(trCountry(country))}</div>` : `<div class="case-admit-country">${escapeHTML(trCountry(country))}</div>`}
+        <div class="case-admit-school">${countryFlag} ${escapeHTML(trUniv(admit, admitEn))}</div>
+        ${major ? `<div class="case-admit-country">${escapeHTML(trMajor(major, majorEn))} · ${escapeHTML(trCountry(country, countryEn))}</div>` : `<div class="case-admit-country">${escapeHTML(trCountry(country, countryEn))}</div>`}
       </div>
       ${takeaways.length ? `
         <div class="case-takeaway">
@@ -2510,30 +2550,38 @@ function openModal(id) {
   const c = ALL_CASES.find((x) => x.id === id);
   if (!c) return;
 
-  document.getElementById("modalName").textContent = c.student_alias || "—";
+  const isEn = currentLang === "en";
+  const studentDisplay = isEn && c.student_alias_en ? c.student_alias_en : (c.student_alias || "—");
+  const gradeDisplay = isEn && c.grade_en ? c.grade_en : (c.grade || "");
+  const purposeDisplay = isEn && c.article_purpose_en ? c.article_purpose_en : c.article_purpose;
+  const gpaDisplay = isEn && c.gpa_en ? c.gpa_en : c.gpa;
+  const acts = isEn && c.activities_en?.length ? c.activities_en : c.activities;
+  const takes = isEn && c.key_takeaways_en?.length ? c.key_takeaways_en : c.key_takeaways;
+  const ts = isEn && c.test_scores_en && Object.keys(c.test_scores_en).length ? c.test_scores_en : c.test_scores;
+
+  document.getElementById("modalName").textContent = studentDisplay;
   document.getElementById("modalSchool").textContent =
-    [trSchool(c.school || c.account_name || ""), trCurr(c.curriculum), c.grade].filter(Boolean).join(" · ");
+    [trSchool(c.school || c.account_name || "", c.school_en), trCurr(c.curriculum), gradeDisplay].filter(Boolean).join(" · ");
 
   const conf = Math.round((c.confidence_score || 0) * 100);
-  const ts = c.test_scores || {};
   const testScoresHTML = Object.keys(ts).length
     ? Object.entries(ts).map(([k, v]) => `<div class="modal-key-value"><span class="modal-key">${escapeHTML(k)}</span><span class="modal-value">${escapeHTML(String(v))}</span></div>`).join("")
     : "—";
 
-  const actsHTML = (c.activities || []).length
-    ? c.activities.map(a => `<div class="modal-takeaway-item">${escapeHTML(a)}</div>`).join("")
+  const actsHTML = (acts || []).length
+    ? acts.map(a => `<div class="modal-takeaway-item">${escapeHTML(a)}</div>`).join("")
     : "—";
 
-  const takesHTML = (c.key_takeaways || []).length
-    ? c.key_takeaways.map(t => `<div class="modal-takeaway-item">${escapeHTML(t)}</div>`).join("")
+  const takesHTML = (takes || []).length
+    ? takes.map(t => `<div class="modal-takeaway-item">${escapeHTML(t)}</div>`).join("")
     : "—";
 
   document.getElementById("modalContent").innerHTML = `
     <div class="modal-section">
       <div class="modal-section-title">${t("admitTo")}</div>
       <div class="case-admit" style="margin-top:0">
-        <div class="case-admit-school">${flagOf((c.admit_country || [])[0] || "")} ${escapeHTML(trUnivList(c.admit_schools) || "—")}</div>
-        <div class="case-admit-country">${escapeHTML(trMajorList(c.admit_majors))} · ${escapeHTML(trCountryList(c.admit_country))}</div>
+        <div class="case-admit-school">${flagOf((c.admit_country || [])[0] || "")} ${escapeHTML(trUnivList(c.admit_schools, c.admit_schools_en) || "—")}</div>
+        <div class="case-admit-country">${escapeHTML(trMajorList(c.admit_majors, c.admit_majors_en))} · ${escapeHTML(trCountryList(c.admit_country, c.admit_country_en))}</div>
       </div>
     </div>
 
@@ -2541,9 +2589,9 @@ function openModal(id) {
       <div class="modal-section-title">${t("statTotalCases")} · ${t("purpose")} · ${t("grade")}</div>
       <div class="modal-key-value">
         <span class="modal-key">${t("curriculum") || "Curriculum"}</span><span class="modal-value">${escapeHTML(trCurr(c.curriculum) || "—")}</span>
-        <span class="modal-key">${t("purpose")}</span><span class="modal-value">${escapeHTML(trPurpose(c.article_purpose) || "—")}</span>
-        <span class="modal-key">${t("grade")}</span><span class="modal-value">${escapeHTML(c.grade || "—")}</span>
-        <span class="modal-key">${t("gpa")}</span><span class="modal-value">${escapeHTML(c.gpa || "—")}</span>
+        <span class="modal-key">${t("purpose")}</span><span class="modal-value">${escapeHTML(trPurpose(c.article_purpose, c.article_purpose_en) || "—")}</span>
+        <span class="modal-key">${t("grade")}</span><span class="modal-value">${escapeHTML(gradeDisplay || "—")}</span>
+        <span class="modal-key">${t("gpa")}</span><span class="modal-value">${escapeHTML(gpaDisplay || "—")}</span>
         <span class="modal-key">${t("aiConfidence")}</span><span class="modal-value">${conf}%</span>
       </div>
     </div>
@@ -2555,14 +2603,14 @@ function openModal(id) {
     </div>
     ` : ""}
 
-    ${(c.activities || []).length ? `
+    ${(acts || []).length ? `
     <div class="modal-section">
       <div class="modal-section-title">${t("activities")}</div>
       ${actsHTML}
     </div>
     ` : ""}
 
-    ${(c.key_takeaways || []).length ? `
+    ${(takes || []).length ? `
     <div class="modal-section">
       <div class="modal-section-title">${t("keyTakeaways")}</div>
       ${takesHTML}
