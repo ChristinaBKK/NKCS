@@ -2011,20 +2011,24 @@ const NON_UNDERGRAD_KEYWORDS = [
   '毕业生', '已毕业',
 ];
 
-// 规范化 grade 值到 6 类：G9/G10/G11/G12/G13/Graduate/Prep-Senior/Prep-Junior
+// 规范化 grade 值到 5 类：G9/G10/G11/G12/Graduate/Prep-Senior/Prep-Junior
+// 注：A-Level/IB 的 Year 13 等同 G12（都是申请大学的最高年级）
 function normalizeGrade(grade) {
   if (!grade) return null;
   const g = grade.trim();
   // 已是规范值
-  if (/^(G\s*9|G\s*10|G\s*11|G\s*12|G\s*13|Graduate|Prep-Senior|Prep-Junior)$/i.test(g)) {
+  if (/^(G\s*9|G\s*10|G\s*11|G\s*12|Graduate|Prep-Senior|Prep-Junior)$/i.test(g)) {
     return g.replace(/\s+/g, '');
   }
+  // G13 / Year 13 / 13 年级 → G12（A-Level/IB 最后一年，与 G12 同一申请段）
+  if (/^(G\s*13|Year\s*13|13\s*年级|13年级|Year 13)$/i.test(g)) return 'G12';
   // 中文写法
   if (g.includes('9年级') || g.includes('9 年级') || g === '初三') return 'G9';
   if (g.includes('10年级') || g.includes('10 年级') || g === '高一') return 'G10';
   if (g.includes('11年级') || g.includes('11 年级') || g === '高二') return 'G11';
   if (g.includes('12年级') || g.includes('12 年级') || g === '高三') return 'G12';
-  if (g.includes('13年级') || g.includes('13 年级')) return 'G13';
+  if (g.includes('13年级') || g.includes('13 年级')) return 'G12';  // 13 年级 = A-Level/IB 最高年
+  if (/A2|AS\/A2|Year 12|Year 13/i.test(g)) return 'G12';
   if (/本科毕业|已毕业|毕业生|届毕业生|Master|硕士|PhD|博士|研究生|申请硕士/.test(g)) return 'Graduate';
   if (/Class of 20\d\d|202\d届|2026届/.test(g)) return 'Graduate';
   return g;  // 兜底
