@@ -2180,7 +2180,13 @@ function applyFilter() {
 
 function getUniqueValues(field) {
   const set = new Set();
+  // 当「仅看本科」打开时，filter 列表里就只展示当前过滤规则下真的会出现 case 的项
+  const filterOutNonUndergrad = FILTER_STATE.undergradOnly;
   ALL_CASES.forEach((c) => {
+    if (filterOutNonUndergrad) {
+      const lvl = getApplicationLevel(c);
+      if (lvl !== 'undergrad' && lvl !== 'unknown') return;
+    }
     const v = c[field];
     if (Array.isArray(v)) v.forEach((x) => x && set.add(x));
     else if (v) set.add(v);
