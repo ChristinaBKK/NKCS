@@ -2047,7 +2047,7 @@ function normalizeGrade(grade) {
 function getApplicationLevel(c) {
   // 优先用规范化后的 grade
   const gradeNorm = normalizeGrade(c.grade) || '';
-  // 把更多字段也喂进来作为信号：article_purpose / key_takeaways / activities / admit_schools
+  // 把更多字段也喂进来作为信号：admit_majors 也很关键（法学博士/JD/MD/LLM）
   const text = [
     c.grade || '',
     c.article_purpose || '',
@@ -2056,6 +2056,8 @@ function getApplicationLevel(c) {
     ...(c.key_takeaways_en || []),
     ...(c.activities || []),
     ...(c.activities_en || []),
+    ...(c.admit_majors || []),
+    ...(c.admit_majors_en || []),
   ].join(' ');
 
   if (!c.grade && !c.admit_schools?.length) return 'unknown';
@@ -2095,12 +2097,14 @@ function getApplicationLevel(c) {
   // 文本里有研究生申请/标化关键词（GRE/GMAT/MCAT/LSAT/法学院/医学院/PhD/硕士 + 跨申/转专业 等）
   const gradSignals = [
     // 学位
-    '研究生', '硕士', '博士', 'PhD', 'Master', "Master's", 'MS ', 'MA ', 'MBA', 'MFA', 'JD', 'MD',
+    '研究生', '硕士', '博士', 'PhD', 'Master', "Master's", 'MS ', 'MA ', 'MBA', 'MFA', 'JD', 'MD', 'LLM', 'EdD', 'PsyD', 'DBA',
+    // 中文学位（更直接的"研究"信号）
+    '法学博士', '医学博士', '法学硕士', '教育学博士', '教育博士', '研究型硕士', '授课型硕士', '专业硕士',
     '研究生申请', '申请研究生', '跨申', '跨专业申请', '考研', '保研', '硕博',
     // 标化
     'GRE', 'GMAT', 'MCAT', 'LSAT',
     // 专业方向
-    '法学院', '医学院', '读研', '先修课', '研究型硕士', '授课型硕士',
+    '法学院', '医学院', '读研', '先修课',
     // 英文学位关键词
     'graduate', 'grad school', 'grad student', 'law school', 'medical school', 'business school',
   ];
@@ -2110,8 +2114,17 @@ function getApplicationLevel(c) {
     if (text.toLowerCase().includes(sig.toLowerCase())) gradHit++;
   }
   if (gradHit >= 2) return 'graduate';
-  // 但如果 grade 写"G12"或典型本科段，且 admit_schools 里有 ≥3 个研究生项目常见校名（Harvard/Stanford/MIT/CMU/Berkeley 等的研究生院通常也带这些校名）则仍判本科
-  // 已经有 G12 guard 在前，这里 fallback 到 graduate 比较安全
+
+  // 强单信号兜底：admit_majors 直接含 JD/MD/LLM/PhD/法学博士 等明确的"专业研究生学位"字样
+  // → 即使其他信号为 0，也认 graduate（避免类似 J 同学 / 法学博士（JD） 漏判）
+  const majors = [...(c.admit_majors || []), ...(c.admit_majors_en || [])].join(' ');
+  const strongSingleSignals = [
+    'JD', 'MD', 'LLM', 'EdD', 'PsyD', 'DBA', 'PhD',
+    '法学博士', '医学博士', '教育博士', '法学硕士', 'Doctor of', 'Juris Doctor',
+  ];
+  for (const sig of strongSingleSignals) {
+    if (majors.includes(sig) || text.includes(sig)) return 'graduate';
+  }
 
   // 默认本科
   return 'undergrad';
