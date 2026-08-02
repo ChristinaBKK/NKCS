@@ -2064,16 +2064,15 @@ function getApplicationLevel(c) {
 async function loadData() {
   document.getElementById("loading").classList.remove("hidden");
   try {
-    // 直接从 student_cases 读（含 _en 字段），join articles + accounts
-    // 视图 v_recent_cases 不含 _en 列，所以必须走表
+    // v_recent_cases 视图已 join articles + accounts，且带全部 _en 列
     const PAGE = 1000;
     let allData = [];
     let from = 0;
     while (true) {
       const { data, error } = await sb
-        .from("student_cases")
-        .select("*, articles!inner(title, published_at, account_id, accounts(name, region))")
-        .order("created_at", { ascending: false })
+        .from("v_recent_cases")
+        .select("*")
+        .order("published_at", { ascending: false })
         .range(from, from + PAGE - 1);
       if (error) throw error;
       if (!data || data.length === 0) break;
@@ -2082,8 +2081,7 @@ async function loadData() {
       from += PAGE;
     }
     ALL_CASES = allData.map(normalizeCase).filter(Boolean);
-    // 标记数据来源
-    console.log(`Loaded ${ALL_CASES.length} cases from student_cases (with _en fields)`);
+    console.log(`Loaded ${ALL_CASES.length} cases from v_recent_cases view`);
 
     document.getElementById("lastUpdate").textContent =
       `${t("lastUpdate") || "更新"}: ${new Date().toLocaleTimeString(currentLang === "zh" ? "zh-CN" : "en-US", { hour: "2-digit", minute: "2-digit" })}`;
@@ -2096,7 +2094,7 @@ async function loadData() {
 }
 
 function normalizeCase(row) {
-  // 兼容 view 和 join (student_cases + articles!inner)
+  // 兼容 view 和 join
   const articles = row.articles || {};
   return {
     id: row.id || row.case_id,
@@ -2128,7 +2126,7 @@ function normalizeCase(row) {
     needs_human_review: row.needs_human_review,
     article_title: row.article_title || articles.title || row.title,
     article_url: row.article_url || articles.url || articles.mp_url || row.url,
-    account_name: (articles.accounts && articles.accounts.name) || row.account_name,
+    account_name: row.account_name || (articles.accounts && articles.accounts.name),
     published_at: row.published_at || articles.published_at,
   };
 }
