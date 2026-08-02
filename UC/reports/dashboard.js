@@ -2152,7 +2152,19 @@ async function loadData() {
       if (data.length < PAGE) break;
       from += PAGE;
     }
-    ALL_CASES = allData.map(normalizeCase).filter(Boolean);
+    // 数据过滤：admit_schools 为空的低质 case 不显示（除非 LLM 置信度 >= 0.6 且来源是录取喜报）
+    ALL_CASES = allData
+      .map(normalizeCase)
+      .filter(Boolean)
+      .filter((c) => {
+        const admits = c.admit_schools || [];
+        if (admits.length > 0) return true;  // 有真实录取学校，正常显示
+        // admit_schools 为空：仅在 conf >= 0.6 且 article_purpose 含"录取"时才显示
+        const conf = c.confidence_score || 0;
+        const purpose = (c.article_purpose || '') + ' ' + (c.article_purpose_en || '');
+        const isAdmit = /录取|offer|admit/i.test(purpose);
+        return conf >= 0.6 && isAdmit;
+      });
     console.log(`Loaded ${ALL_CASES.length} cases from v_recent_cases view`);
 
     document.getElementById("lastUpdate").textContent =
