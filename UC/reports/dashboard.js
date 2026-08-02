@@ -2023,7 +2023,10 @@ function normalizeGrade(grade) {
   // G13 / Year 13 / 13 年级 → G12（A-Level/IB 最后一年，与 G12 同一申请段）
   if (/^(G\s*13|Year\s*13|13\s*年级|13年级|Year 13)$/i.test(g)) return 'G12';
   // 中文写法
-  if (g.includes('9年级') || g.includes('9 年级') || g === '初三') return 'G9';
+  if (g.includes('6年级') || g.includes('6 年级')) return 'MiddleSchool';
+  if (g.includes('7年级') || g.includes('7 年级')) return 'MiddleSchool';
+  if (g.includes('8年级') || g.includes('8 年级') || g === '初二' || g === '初三' || g === '初一') return 'MiddleSchool';
+  if (g.includes('9年级') || g.includes('9 年级')) return 'G9';
   if (g.includes('10年级') || g.includes('10 年级') || g === '高一') return 'G10';
   if (g.includes('11年级') || g.includes('11 年级') || g === '高二') return 'G11';
   if (g.includes('12年级') || g.includes('12 年级') || g === '高三') return 'G12';
@@ -2049,8 +2052,8 @@ function getApplicationLevel(c) {
   // 至少有 2 个美高名（避免单个 case 误判）
   const hsNameCount = (allAdmitText.match(/\b(Academy|Preparatory|Prep School|High School|Upper School)\b/gi) || []).length;
 
-  // 高中申请：G9-G11
-  if (/^(G9|G10|G11)$/i.test(gradeNorm)) {
+  // 高中申请：MiddleSchool (6-8 年级) + G9-G11
+  if (/^(MiddleSchool|G9|G10|G11)$/i.test(gradeNorm)) {
     return 'highschool';
   }
   if (/美高|高中申请|美高申请|国际高中.*G(10|9|11)|Prep-Junior|Prep-Senior/i.test(text)) {
@@ -2059,6 +2062,12 @@ function getApplicationLevel(c) {
   // admit_schools 全是高中名（如 Deerfield Academy / Lawrenceville）
   if (admits.length > 0 && hsNameCount >= 2 && !admits.some(s => /大学|University|College|学校/i.test(s) && !/Academy|Preparatory|Prep School|High School/.test(s))) {
     return 'highschool';
+  }
+  // admit_schools 里没有真正的大学（不含 大学/学院/University/College/Institute）
+  // 而且 grade 是初中/MiddleSchool 段 → 误填的国内学校名，不是本科录取
+  if (gradeNorm === 'MiddleSchool' || /^(6|7|8|9)\s*年级|初一|初二|初三/.test(c.grade || '')) {
+    const hasUniv = admits.some(s => /大学|学院|University|College|Institute|Universit/i.test(s));
+    if (!hasUniv) return 'highschool';
   }
 
   // 研究生
