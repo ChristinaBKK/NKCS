@@ -2127,7 +2127,7 @@ function normalizeCase(row) {
     confidence_score: row.confidence_score,
     needs_human_review: row.needs_human_review,
     article_title: row.article_title || articles.title || row.title,
-    article_url: row.article_url || row.url,
+    article_url: row.article_url || articles.url || articles.mp_url || row.url,
     account_name: (articles.accounts && articles.accounts.name) || row.account_name,
     published_at: row.published_at || articles.published_at,
   };
