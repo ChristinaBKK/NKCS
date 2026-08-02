@@ -25,9 +25,12 @@ const I18N = {
     filterLevel: "申请层级",
     filterUndergradOnly: "仅看本科申请",
     filterUndergradHint: "关闭后包含硕士 / 高中 / 研究生申请",
-    levelUndergrad: "本科",
-    levelGraduate: "研究生 / 硕士",
-    levelHighSchool: "美高 / 国际高中",
+    quickLevel: "🎯 申请层级：",
+    levelUndergrad: "本科申请",
+    levelGraduate: "研究生申请",
+    levelHighschool: "美高申请",
+    levelAll: "全部",
+    levelHint: "默认仅本科；研究生/美高数据也保留在库里",
     actionSaveFilter: "💾 保存我的筛选",
     actionClear: "清除",
     heroTitle: "优秀学生案例",
@@ -90,9 +93,12 @@ const I18N = {
     filterLevel: "Level",
     filterUndergradOnly: "Undergraduate only",
     filterUndergradHint: "Off = also include Master's / High School",
+    quickLevel: "🎯 Application Level:",
     levelUndergrad: "Undergraduate",
-    levelGraduate: "Graduate / Master's",
-    levelHighSchool: "US High School / International HS",
+    levelGraduate: "Graduate",
+    levelHighschool: "US High School",
+    levelAll: "All",
+    levelHint: "Default = undergraduate only; grad / HS data also kept",
     actionSaveFilter: "💾 Save my filter",
     actionClear: "Clear",
     heroTitle: "Outstanding Student Cases",
@@ -1993,7 +1999,8 @@ const FILTER_STATE = {
   country: new Set(),
   admit: new Set(),
   time: "all",
-  undergradOnly: true,   // 仅看本科申请（默认开启）
+  level: "undergrad",    // 申请层级: undergrad / graduate / highschool / all
+  undergradOnly: true,   // 兼容旧逻辑；与 level 同步
 };
 
 // ============================================
@@ -2208,10 +2215,12 @@ function applyFilter() {
       const year = new Date(c.published_at).getFullYear().toString();
       if (year !== FILTER_STATE.time) return false;
     }
-    // 申请层级（仅看本科开关）
-    if (FILTER_STATE.undergradOnly) {
+    // 申请层级（仅看本科开关 + 顶部 chip）
+    if (FILTER_STATE.level !== 'all') {
       const lvl = getApplicationLevel(c);
-      if (lvl !== 'undergrad' && lvl !== 'unknown') return false;
+      if (lvl !== FILTER_STATE.level && lvl !== 'unknown' && FILTER_STATE.level !== 'undergrad') return false;
+      // 本科模式：高中 + 研究生都过滤掉
+      if (FILTER_STATE.level === 'undergrad' && (lvl === 'graduate' || lvl === 'highschool')) return false;
     }
     return true;
   });
@@ -2220,12 +2229,13 @@ function applyFilter() {
 
 function getUniqueValues(field) {
   const set = new Set();
-  // 当「仅看本科」打开时，filter 列表里就只展示当前过滤规则下真的会出现 case 的项
-  const filterOutNonUndergrad = FILTER_STATE.undergradOnly;
+  // 当 level 不是 all 时，filter 列表里就只展示当前过滤规则下真的会出现 case 的项
+  const level = FILTER_STATE.level;
   ALL_CASES.forEach((c) => {
-    if (filterOutNonUndergrad) {
+    if (level !== 'all') {
       const lvl = getApplicationLevel(c);
-      if (lvl !== 'undergrad' && lvl !== 'unknown') return;
+      if (level === 'undergrad' && (lvl === 'graduate' || lvl === 'highschool')) return;
+      if (level !== 'undergrad' && lvl !== level && lvl !== 'unknown') return;
     }
     const v = c[field];
     if (Array.isArray(v)) v.forEach((x) => x && set.add(x));
@@ -2302,10 +2312,13 @@ function clearFilter() {
   FILTER_STATE.country.clear();
   FILTER_STATE.admit.clear();
   FILTER_STATE.time = "all";
+  FILTER_STATE.level = "undergrad";
   FILTER_STATE.undergradOnly = true;
   document.getElementById("filterTime").value = "all";
   const undergradChk = document.getElementById("filterUndergradOnly");
   if (undergradChk) undergradChk.checked = true;
+  // 同步顶部 chip
+  document.querySelectorAll(".level-chip").forEach((b) => b.classList.toggle("active", b.dataset.level === "undergrad"));
   // 清空 admit 搜索
   const admitSearch = document.getElementById("filterAdmitSearch");
   if (admitSearch) admitSearch.value = "";
@@ -2349,10 +2362,31 @@ document.getElementById("filterTime")?.addEventListener("change", (e) => {
   applyFilter();
 });
 
-// 仅看本科开关
+// 仅看本科开关（侧边栏）
 document.getElementById("filterUndergradOnly")?.addEventListener("change", (e) => {
   FILTER_STATE.undergradOnly = e.target.checked;
+  FILTER_STATE.level = e.target.checked ? "undergrad" : "all";
+  // 同步顶部 chip
+  document.querySelectorAll(".level-chip").forEach((b) =>
+    b.classList.toggle("active", b.dataset.level === FILTER_STATE.level)
+  );
   applyFilter();
+});
+
+// 顶部申请层级 chip
+document.querySelectorAll(".level-chip").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    const lv = btn.dataset.level;
+    FILTER_STATE.level = lv;
+    FILTER_STATE.undergradOnly = (lv === "undergrad");
+    document.querySelectorAll(".level-chip").forEach((b) =>
+      b.classList.toggle("active", b.dataset.level === lv)
+    );
+    const sideChk = document.getElementById("filterUndergradOnly");
+    if (sideChk) sideChk.checked = (lv === "undergrad");
+    applyFilter();
+    renderFilters();
+  });
 });
 
 // ============================================
