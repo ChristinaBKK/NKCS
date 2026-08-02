@@ -2040,7 +2040,16 @@ function normalizeGrade(grade) {
 function getApplicationLevel(c) {
   // 优先用规范化后的 grade
   const gradeNorm = normalizeGrade(c.grade) || '';
-  const text = (c.grade || '') + ' ' + (c.article_purpose || '') + ' ' + (c.key_takeaways || []).join(' ') + ' ' + (c.key_takeaways_en || []).join(' ');
+  // 把更多字段也喂进来作为信号：article_purpose / key_takeaways / activities / admit_schools
+  const text = [
+    c.grade || '',
+    c.article_purpose || '',
+    c.article_purpose_en || '',
+    ...(c.key_takeaways || []),
+    ...(c.key_takeaways_en || []),
+    ...(c.activities || []),
+    ...(c.activities_en || []),
+  ].join(' ');
 
   if (!c.grade && !c.admit_schools?.length) return 'unknown';
 
@@ -2070,10 +2079,32 @@ function getApplicationLevel(c) {
     if (!hasUniv) return 'highschool';
   }
 
-  // 研究生
-  if (gradeNorm === 'Graduate' || /硕士|研究生|申请硕士|PhD|博士|Master|Master's|本科毕业|已毕业|届毕业生|Class of 20\d\d/i.test(text)) {
+  // 研究生：综合 grade + 文本信号
+  if (gradeNorm === 'Graduate') return 'graduate';
+  // grade 字段里带"研究生/大四"等词
+  if (/申请研究|大四|本科.*申请|研一|研二|研三|硕士在读|博士在读|保研|考研/i.test(c.grade || '')) {
     return 'graduate';
   }
+  // 文本里有研究生申请/标化关键词（GRE/GMAT/MCAT/LSAT/法学院/医学院/PhD/硕士 + 跨申/转专业 等）
+  const gradSignals = [
+    // 学位
+    '研究生', '硕士', '博士', 'PhD', 'Master', "Master's", 'MS ', 'MA ', 'MBA', 'MFA', 'JD', 'MD',
+    '研究生申请', '申请研究生', '跨申', '跨专业申请', '考研', '保研', '硕博',
+    // 标化
+    'GRE', 'GMAT', 'MCAT', 'LSAT',
+    // 专业方向
+    '法学院', '医学院', '读研', '先修课', '研究型硕士', '授课型硕士',
+    // 英文学位关键词
+    'graduate', 'grad school', 'grad student', 'law school', 'medical school', 'business school',
+  ];
+  // 至少 2 个 graduate 信号才认（避免 "Master of Finance" 在本科项目里被误抓）
+  let gradHit = 0;
+  for (const sig of gradSignals) {
+    if (text.toLowerCase().includes(sig.toLowerCase())) gradHit++;
+  }
+  if (gradHit >= 2) return 'graduate';
+  // 但如果 grade 写"G12"或典型本科段，且 admit_schools 里有 ≥3 个研究生项目常见校名（Harvard/Stanford/MIT/CMU/Berkeley 等的研究生院通常也带这些校名）则仍判本科
+  // 已经有 G12 guard 在前，这里 fallback 到 graduate 比较安全
 
   // 默认本科
   return 'undergrad';
