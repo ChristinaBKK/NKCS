@@ -2041,11 +2041,23 @@ function getApplicationLevel(c) {
 
   if (!c.grade && !c.admit_schools?.length) return 'unknown';
 
+  // 检测 admit_schools 是否都是美高/英高（Academy/School/Prep 关键词）
+  const admits = c.admit_schools || [];
+  const admitsEn = c.admit_schools_en || [];
+  const allAdmitText = [...admits, ...admitsEn].join(' ');
+  const looksLikeHighSchool = /\b(Academy|Preparatory|Prep School|High School|Upper School|Montessori)\b/i.test(allAdmitText);
+  // 至少有 2 个美高名（避免单个 case 误判）
+  const hsNameCount = (allAdmitText.match(/\b(Academy|Preparatory|Prep School|High School|Upper School)\b/gi) || []).length;
+
   // 高中申请：G9-G11
   if (/^(G9|G10|G11)$/i.test(gradeNorm)) {
     return 'highschool';
   }
   if (/美高|高中申请|美高申请|国际高中.*G(10|9|11)|Prep-Junior|Prep-Senior/i.test(text)) {
+    return 'highschool';
+  }
+  // admit_schools 全是高中名（如 Deerfield Academy / Lawrenceville）
+  if (admits.length > 0 && hsNameCount >= 2 && !admits.some(s => /大学|University|College|学校/i.test(s) && !/Academy|Preparatory|Prep School|High School/.test(s))) {
     return 'highschool';
   }
 
