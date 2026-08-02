@@ -2094,6 +2094,17 @@ function getApplicationLevel(c) {
   if (/申请研究|大四|本科.*申请|研一|研二|研三|硕士在读|博士在读|保研|考研/i.test(c.grade || '')) {
     return 'graduate';
   }
+  // student_alias 里写本科学校 + 学位等级/分数（如"X 同学（伦敦国王学院·二等一）"、"Y 同学（考文垂大学·65分）"）→ 本科毕业申请硕士
+  const alias = c.student_alias || '';
+  if (/（[^）]*?(二等一|二等二|一等|二等三|First|Upper|2:1|2:2|1st|2nd)[^）]*）/i.test(alias) ||
+      /（[^）]*?\d+\s*分[^）]*）/i.test(alias)) {
+    return 'graduate';
+  }
+  // admit_majors 含"硕士"或"Master of"/"MSc"/"MA "/"Msc"等学位字样
+  const majorsOnly = (c.admit_majors || []).join(' ');
+  if (/硕士|Master of|MSc|MA\s|MBA|MPA|MFE|MEng|MMath|MPhys|MS\s/i.test(majorsOnly)) {
+    return 'graduate';
+  }
   // 文本里有研究生申请/标化关键词（GRE/GMAT/MCAT/LSAT/法学院/医学院/PhD/硕士 + 跨申/转专业 等）
   const gradSignals = [
     // 学位
