@@ -2064,16 +2064,16 @@ function getApplicationLevel(c) {
 async function loadData() {
   document.getElementById("loading").classList.remove("hidden");
   try {
-    // v_recent_cases 视图已经 join 了 articles 和 accounts
-    // PostgREST 默认 limit 1000，必须分页拉全
+    // 直接从 student_cases 读（含 _en 字段），join articles + accounts
+    // 视图 v_recent_cases 不含 _en 列，所以必须走表
     const PAGE = 1000;
     let allData = [];
     let from = 0;
     while (true) {
       const { data, error } = await sb
-        .from("v_recent_cases")
-        .select("*")
-        .order("published_at", { ascending: false })
+        .from("student_cases")
+        .select("*, articles!inner(title, published_at, account_id, accounts(name, region))")
+        .order("created_at", { ascending: false })
         .range(from, from + PAGE - 1);
       if (error) throw error;
       if (!data || data.length === 0) break;
@@ -2081,26 +2081,9 @@ async function loadData() {
       if (data.length < PAGE) break;
       from += PAGE;
     }
-
-    // 兜底：如果视图为空或权限问题，从 student_cases 取
-    if (!allData || allData.length === 0) {
-      let allCases = [];
-      let cf = 0;
-      while (true) {
-        const { data: cases } = await sb
-          .from("student_cases")
-          .select("*, articles!inner(title, published_at, account_id, accounts(name, region))")
-          .order("created_at", { ascending: false })
-          .range(cf, cf + PAGE - 1);
-        if (!cases || cases.length === 0) break;
-        allCases = allCases.concat(cases);
-        if (cases.length < PAGE) break;
-        cf += PAGE;
-      }
-      ALL_CASES = allCases.map(normalizeCase).filter(Boolean);
-    } else {
-      ALL_CASES = allData.map(normalizeCase).filter(Boolean);
-    }
+    ALL_CASES = allData.map(normalizeCase).filter(Boolean);
+    // 标记数据来源
+    console.log(`Loaded ${ALL_CASES.length} cases from student_cases (with _en fields)`);
 
     document.getElementById("lastUpdate").textContent =
       `${t("lastUpdate") || "更新"}: ${new Date().toLocaleTimeString(currentLang === "zh" ? "zh-CN" : "en-US", { hour: "2-digit", minute: "2-digit" })}`;
@@ -2113,7 +2096,8 @@ async function loadData() {
 }
 
 function normalizeCase(row) {
-  // 兼容 view 和 join
+  // 兼容 view 和 join (student_cases + articles!inner)
+  const articles = row.articles || {};
   return {
     id: row.id || row.case_id,
     student_alias: row.student_alias,
@@ -2142,10 +2126,10 @@ function normalizeCase(row) {
     is_arts: row.is_arts || false,
     confidence_score: row.confidence_score,
     needs_human_review: row.needs_human_review,
-    article_title: row.article_title || row.title,
+    article_title: row.article_title || articles.title || row.title,
     article_url: row.article_url || row.url,
-    account_name: row.account_name,
-    published_at: row.published_at,
+    account_name: (articles.accounts && articles.accounts.name) || row.account_name,
+    published_at: row.published_at || articles.published_at,
   };
 }
 
