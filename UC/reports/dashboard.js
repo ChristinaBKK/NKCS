@@ -2498,7 +2498,10 @@ function caseCardHTML(c) {
   const admitEn = (c.admit_schools_en || [])[0] || "";
   const major = (c.admit_majors || [])[0] || "";
   const majorEn = (c.admit_majors_en || [])[0] || "";
-  const takeaways = currentLang === "en" && c.key_takeaways_en?.length ? c.key_takeaways_en.slice(0, 2) : (c.key_takeaways || []).slice(0, 2);
+  // 英文模式：优先 _en 字段（_en 缺失则 fallback 中文）
+  const takeaways = currentLang === "en"
+    ? ((c.key_takeaways_en && c.key_takeaways_en.length > 0) ? c.key_takeaways_en.slice(0, 2) : (c.key_takeaways || []).slice(0, 2))
+    : (c.key_takeaways || []).slice(0, 2);
   const conf = Math.round((c.confidence_score || 0) * 100);
   const confColor = conf >= 80 ? "text-emerald-600" : conf >= 60 ? "text-amber-600" : "text-slate-500";
 
