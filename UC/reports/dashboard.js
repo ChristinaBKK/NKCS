@@ -25,12 +25,12 @@ const I18N = {
     filterLevel: "申请层级",
     filterUndergradOnly: "仅看本科申请",
     filterUndergradHint: "关闭后包含硕士 / 高中 / 研究生申请",
-    quickLevel: "🎯 申请层级：",
-    levelUndergrad: "本科申请",
-    levelGraduate: "研究生申请",
-    levelHighschool: "美高申请",
-    levelAll: "全部",
-    levelHint: "默认仅本科；研究生/美高数据也保留在库里",
+    quickLevel: "",
+    levelUndergrad: "",
+    levelGraduate: "",
+    levelHighschool: "",
+    levelAll: "",
+    levelHint: "",
     actionSaveFilter: "💾 保存我的筛选",
     actionClear: "清除",
     heroTitle: "优秀学生案例",
@@ -93,12 +93,12 @@ const I18N = {
     filterLevel: "Level",
     filterUndergradOnly: "Undergraduate only",
     filterUndergradHint: "Off = also include Master's / High School",
-    quickLevel: "🎯 Application Level:",
-    levelUndergrad: "Undergraduate",
-    levelGraduate: "Graduate",
-    levelHighschool: "US High School",
-    levelAll: "All",
-    levelHint: "Default = undergraduate only; grad / HS data also kept",
+    quickLevel: "",
+    levelUndergrad: "",
+    levelGraduate: "",
+    levelHighschool: "",
+    levelAll: "",
+    levelHint: "",
     actionSaveFilter: "💾 Save my filter",
     actionClear: "Clear",
     heroTitle: "Outstanding Student Cases",
@@ -2279,7 +2279,7 @@ function renderFilterList(elId, items, selectedSet, filterKey, translateFn, sear
     div.dataset.filter = filterKey;
     div.innerHTML = `
       <input type="checkbox" ${selectedSet.has(item) ? "checked" : ""}>
-      <span class="truncate">${escapeHTML(translateFn ? translateFn(item) : item)}</span>
+      <span class="flex-1 break-words leading-snug">${escapeHTML(translateFn ? translateFn(item) : item)}</span>
     `;
     div.addEventListener("click", () => toggleFilter(filterKey, item));
     el.appendChild(div);
@@ -2366,27 +2366,7 @@ document.getElementById("filterTime")?.addEventListener("change", (e) => {
 document.getElementById("filterUndergradOnly")?.addEventListener("change", (e) => {
   FILTER_STATE.undergradOnly = e.target.checked;
   FILTER_STATE.level = e.target.checked ? "undergrad" : "all";
-  // 同步顶部 chip
-  document.querySelectorAll(".level-chip").forEach((b) =>
-    b.classList.toggle("active", b.dataset.level === FILTER_STATE.level)
-  );
   applyFilter();
-});
-
-// 顶部申请层级 chip
-document.querySelectorAll(".level-chip").forEach((btn) => {
-  btn.addEventListener("click", () => {
-    const lv = btn.dataset.level;
-    FILTER_STATE.level = lv;
-    FILTER_STATE.undergradOnly = (lv === "undergrad");
-    document.querySelectorAll(".level-chip").forEach((b) =>
-      b.classList.toggle("active", b.dataset.level === lv)
-    );
-    const sideChk = document.getElementById("filterUndergradOnly");
-    if (sideChk) sideChk.checked = (lv === "undergrad");
-    applyFilter();
-    renderFilters();
-  });
 });
 
 // ============================================

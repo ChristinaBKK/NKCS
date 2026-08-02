@@ -84,10 +84,10 @@
   </header>
 
   <main class="max-w-[1600px] mx-auto px-6 py-6">
-    <div class="grid grid-cols-12 gap-6">
+    <div class="flex flex-col lg:flex-row gap-6">
 
       <!-- ============= 左侧筛选 ============= -->
-      <aside class="col-span-12 lg:col-span-3 xl:col-span-2">
+      <aside class="w-full lg:w-80 xl:w-96 2xl:w-[26rem] shrink-0">
         <div class="bg-white rounded-xl border border-slate-200 p-5 sticky top-20 max-h-[calc(100vh-6rem)] overflow-y-auto">
           <div class="flex items-center justify-between mb-4">
             <h3 class="text-sm font-semibold text-slate-900" data-i18n="filterTitle">筛选</h3>
@@ -165,26 +165,12 @@
       </aside>
 
       <!-- ============= 主内容 ============= -->
-      <section class="col-span-12 lg:col-span-9 xl:col-span-10 space-y-6">
+      <section class="flex-1 min-w-0 space-y-6">
 
         <!-- 顶部介绍 -->
         <div class="bg-gradient-to-r from-primary-800 to-primary-600 rounded-xl p-6 text-white">
           <h2 class="text-2xl font-bold mb-1" data-i18n="heroTitle">优秀学生案例</h2>
           <p class="text-primary-100 text-sm" data-i18n="heroDesc">升学 + 学术 双视角 · 数据驱动的对标研究</p>
-        </div>
-
-        <!-- 申请层级快速切换（顶部醒目位置） -->
-        <div class="bg-white rounded-xl border-2 border-amber-300 p-4 flex flex-wrap items-center gap-4">
-          <div class="flex items-center gap-2">
-            <span class="text-sm font-semibold text-slate-700" data-i18n="quickLevel">🎯 申请层级：</span>
-          </div>
-          <div class="flex flex-wrap items-center gap-2" id="quickLevelChips">
-            <button data-level="undergrad" class="level-chip active px-3 py-1.5 text-xs rounded-full border font-medium transition" data-i18n="levelUndergrad">本科申请</button>
-            <button data-level="graduate" class="level-chip px-3 py-1.5 text-xs rounded-full border font-medium transition" data-i18n="levelGraduate">研究生申请</button>
-            <button data-level="highschool" class="level-chip px-3 py-1.5 text-xs rounded-full border font-medium transition" data-i18n="levelHighschool">美高申请</button>
-            <button data-level="all" class="level-chip px-3 py-1.5 text-xs rounded-full border font-medium transition" data-i18n="levelAll">全部</button>
-          </div>
-          <span class="text-xs text-slate-500 ml-auto" id="levelHint" data-i18n="levelHint">默认仅本科；研究生/美高数据也保留在库里</span>
         </div>
 
         <!-- 统计卡片 -->
