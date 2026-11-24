@@ -16,12 +16,12 @@
   --ink:#17150f;
   --ink-soft:#4c4738;
   --line:#d8d2c2;
-  --sigma:#2456c8;      /* σ blue */
-  --sigma-soft:#dbe6fb;
-  --pi:#e0631a;         /* π orange */
-  --pi-soft:#fbe4d2;
-  --hybrid:#0f7a52;     /* hybridisation green */
-  --hybrid-soft:#d9efe4;
+  --sigma:#0072b2;      /* σ blue — Okabe–Ito */
+  --sigma-soft:#d5e9f4;
+  --pi:#d55e00;         /* π vermillion — Okabe–Ito */
+  --pi-soft:#f8e3d1;
+  --hybrid:#009e73;     /* hybrid bluish green — Okabe–Ito */
+  --hybrid-soft:#d6efe5;
   --mol:#6a3fb8;        /* molecules violet */
   --mol-soft:#e9dffa;
   --quiz:#a3112e;       /* quiz crimson */
@@ -332,15 +332,21 @@ table.cmp td:first-child{font-weight:600;white-space:nowrap;background:#fbf9f3}
     <h2>Two ways orbitals can overlap</h2>
     <div class="cols wide-left">
       <div>
-        <p>A covalent bond forms when two atomic orbitals overlap and the shared pair sits between the nuclei. Pick an overlap below and watch it happen.</p>
+        <p>Watch the orbitals approach — the nuclei close in as the bond forms.</p>
         <div class="stepper" id="ovlPicker" role="tablist" aria-label="Choose overlap type">
           <button class="stp on" data-ovl="ss">s–s σ</button>
           <button class="stp" data-ovl="sp">s–p σ</button>
           <button class="stp" data-ovl="pp">p–p σ (end-on)</button>
           <button class="stp" data-ovl="pi">p–p π (sideways)</button>
         </div>
-        <div class="stage">
-          <svg id="ovlSvg" viewBox="0 0 640 250" role="img" aria-label="Orbital overlap animation"></svg>
+        <div class="stage stage3d">
+          <div class="scene3d sm" id="ovlScene"><div class="fb3d">Loading 3D model…</div></div>
+          <div class="draghint">⟲ drag to rotate</div>
+        </div>
+        <p class="stepcap" id="ovlCap"></p>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:8px">
+          <button class="btn ghost" id="ovlBond">▶ Replay bond formation</button>
+          <button class="btn ghost" id="ovlRot">⟲ Try to rotate the bond</button>
         </div>
         <div class="legend" id="ovlLegend"></div>
       </div>
@@ -373,8 +379,10 @@ table.cmp td:first-child{font-weight:600;white-space:nowrap;background:#fbf9f3}
           <button class="stp" data-ord="2">Double · C=C</button>
           <button class="stp" data-ord="3">Triple · N≡N</button>
         </div>
-        <div class="stage">
-          <svg id="ordSvg" viewBox="0 0 640 300" role="img" aria-label="Bond order diagram"></svg>
+        <div class="stage stage3d">
+          <div class="scene3d sm" id="ordScene"><div class="fb3d">Loading 3D model…</div></div>
+          <div class="stepovl" id="ordStepOvl"></div>
+          <div class="draghint">⟲ drag to rotate</div>
         </div>
         <div class="legend">
           <span><i style="background:var(--sigma)"></i>σ bond (on axis)</span>
@@ -394,7 +402,7 @@ table.cmp td:first-child{font-weight:600;white-space:nowrap;background:#fbf9f3}
   <div class="slide-inner">
     <div class="kicker">Spec 3.4.2(c) i–iii · mixing orbitals</div>
     <h2>Hybridisation: mixing s and p into new orbitals</h2>
-    <p class="lede">An atom can blend its s and p orbitals into equivalent <strong>hybrid orbitals</strong> — the number mixed in is the number you get out. Pick a type.</p>
+    <p class="lede">Atoms blend s and p orbitals into equivalent <strong>hybrid orbitals</strong>. Pick a type.</p>
     <div class="cols" style="margin-top:14px">
       <div>
         <div class="stepper" id="hybPicker">
@@ -403,10 +411,20 @@ table.cmp td:first-child{font-weight:600;white-space:nowrap;background:#fbf9f3}
           <button class="stp" data-hyb="sp3">sp³</button>
         </div>
         <div class="stage" style="background:#fbf9f3">
-          <svg id="hybSvg" viewBox="0 0 640 330" role="img" aria-label="Hybridisation mixer diagram"></svg>
+          <svg id="hybSvg" viewBox="0 0 640 280" role="img" aria-label="Hybridisation mixer diagram"></svg>
+        </div>
+        <div id="hybRule"></div>
+      </div>
+      <div>
+        <div id="hybCard"></div>
+        <div class="card" style="margin-top:12px;padding:12px 16px">
+          <p style="font-family:var(--font-mono);font-size:11px;font-weight:600;letter-spacing:.12em;margin:0 0 4px;color:var(--ink-soft)">SHAPE AROUND THE ATOM — DRAG TO ROTATE</p>
+          <div class="stage stage3d" style="border:none;background:transparent;box-shadow:none">
+            <div class="scene3d geo3d" id="geoScene"><div class="fb3d">Loading 3D…</div></div>
+          </div>
+          <p id="geoCap" style="font-family:var(--font-mono);font-size:13px;margin:2px 0 0;text-align:center"></p>
         </div>
       </div>
-      <div id="hybCard"></div>
     </div>
   </div>
 </section>
@@ -416,15 +434,16 @@ table.cmp td:first-child{font-weight:600;white-space:nowrap;background:#fbf9f3}
   <div class="slide-inner">
     <div class="kicker">Spec 3.4.2(c) · exam method</div>
     <h2>Work it out: σ bonds + lone pairs</h2>
-    <p class="lede">Count the <strong>σ bonds and lone pairs</strong> around the atom — the total tells you the hybridisation, and therefore the shape. Try each molecule.</p>
+    <p class="lede">Count the <strong>σ bonds and lone pairs</strong> around the atom — the total gives the hybridisation and the shape. Try each molecule.</p>
     <div class="cols" style="margin-top:14px">
       <div>
         <div class="stepper" id="predPicker"></div>
-        <div class="card" id="predCard" style="min-height:270px"></div>
+        <div class="card" id="predCard" style="min-height:250px"></div>
+        <div class="rule"><b>Note:</b> count a double or triple bond as <b>one σ</b> (the π bonds come from unhybridised p orbitals and don't affect the count).</div>
       </div>
       <div>
-        <div class="card">
-          <h3>The counting table</h3>
+        <div class="card" style="padding:12px 16px">
+          <h3 style="font-size:clamp(15px,1.3vw,17.5px)">The counting table</h3>
           <table class="cmp">
             <tr><th>σ + lone pairs</th><th>Hybridisation</th><th>Shape</th><th>Angle</th></tr>
             <tr><td>2</td><td class="mono">sp</td><td>Linear</td><td>180°</td></tr>
@@ -432,7 +451,13 @@ table.cmp td:first-child{font-weight:600;white-space:nowrap;background:#fbf9f3}
             <tr><td>4</td><td class="mono">sp³</td><td>Tetrahedral</td><td>109.5°</td></tr>
           </table>
         </div>
-        <div class="rule"><b>Note:</b> count a double or triple bond as <b>one σ</b> (the π bonds come from unhybridised p orbitals and don't affect the count).</div>
+        <div class="card" style="margin-top:12px;padding:12px 16px">
+          <p style="font-family:var(--font-mono);font-size:11px;font-weight:600;letter-spacing:.12em;margin:0 0 4px;color:var(--ink-soft)">3D VIEW — <span style="color:var(--sigma)">σ</span> · <span style="color:var(--pi)">π</span> · <span style="color:var(--hybrid)">LONE PAIR</span> — DRAG TO ROTATE</p>
+          <div class="stage stage3d" style="border:none;background:transparent;box-shadow:none">
+            <div class="scene3d mol3d" id="predScene"><div class="fb3d">Loading 3D…</div></div>
+          </div>
+          <p id="predMolCap" style="font-family:var(--font-mono);font-size:12.5px;margin:2px 0 0;text-align:center"></p>
+        </div>
       </div>
     </div>
   </div>
@@ -448,8 +473,9 @@ table.cmp td:first-child{font-weight:600;white-space:nowrap;background:#fbf9f3}
         <div class="stepper" id="n2Steps"></div>
         <div class="stage stage3d">
           <div class="scene3d" id="n2Scene" role="application" aria-label="Interactive 3D model of the nitrogen molecule — drag to rotate">
-            <div id="n2Fallback" style="display:grid;place-items:center;height:100%;font-family:var(--font-mono);font-size:13px;color:var(--ink-soft);text-align:center;padding:20px">Loading 3D model…<br>(needs an internet connection for the 3D library)</div>
+            <div class="fb3d">Loading 3D model…<br>(needs an internet connection for the 3D library)</div>
           </div>
+          <div class="stepovl" id="n2StepOvl"></div>
           <div class="draghint">⟲ drag to rotate</div>
         </div>
         <div class="legend">
@@ -479,8 +505,10 @@ table.cmp td:first-child{font-weight:600;white-space:nowrap;background:#fbf9f3}
     <div class="cols wide-left">
       <div>
         <div class="stepper" id="hcnSteps"></div>
-        <div class="stage">
-          <svg id="hcnSvg" viewBox="0 0 700 340" role="img" aria-label="Step-by-step bonding in hydrogen cyanide"></svg>
+        <div class="stage stage3d">
+          <div class="scene3d" id="hcnScene"><div class="fb3d">Loading 3D model…</div></div>
+          <div class="stepovl" id="hcnStepOvl"></div>
+          <div class="draghint">⟲ drag to rotate</div>
         </div>
         <div class="legend">
           <span><i style="background:var(--ink)"></i>nucleus</span>
@@ -491,6 +519,10 @@ table.cmp td:first-child{font-weight:600;white-space:nowrap;background:#fbf9f3}
       </div>
       <div>
         <p class="stepcap" id="hcnCap"></p>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px">
+          <button class="btn ghost" id="hcnReset">⟲ Reset view</button>
+          <button class="btn ghost" id="hcnAuto">▶ Play steps</button>
+        </div>
         <div class="card" style="margin-top:16px">
           <h3>Check yourself — tap a bond</h3>
           <p style="font-size:14.5px">In the completed molecule, is each C–N link a σ or a π bond? Use the buttons.</p>
@@ -511,7 +543,7 @@ table.cmp td:first-child{font-weight:600;white-space:nowrap;background:#fbf9f3}
   <div class="slide-inner">
     <div class="kicker">Mark-scheme language</div>
     <h2>Say it the way Cambridge wants it</h2>
-    <p class="lede">These questions are worth easy marks — if your wording hits the marking points. Click each card to flip it.</p>
+    <p class="lede">Easy marks — if your wording hits the marking points. Click a card to flip it.</p>
     <div class="cols" style="margin-top:18px" id="flipWrap">
       <div class="flipcard" tabindex="0" role="button" aria-label="Flashcard: describe a sigma bond">
         <div class="flipfront card"><h3 style="color:var(--sigma)">“Describe how a σ bond forms.”</h3><p>Click to reveal the mark-scheme answer →</p></div>
@@ -557,7 +589,7 @@ table.cmp td:first-child{font-weight:600;white-space:nowrap;background:#fbf9f3}
       <div class="tick"><svg width="18" height="18" viewBox="0 0 18 18"><circle cx="9" cy="9" r="8" fill="none" stroke="var(--hybrid)" stroke-width="2"/><path d="M5 9.5l2.5 2.5L13 6.5" fill="none" stroke="var(--hybrid)" stroke-width="2" stroke-linecap="round"/></svg><span><strong>sp</strong> = linear 180° · <strong>sp²</strong> = trigonal planar 120° · <strong>sp³</strong> = tetrahedral 109.5°.</span></div>
       <div class="tick"><svg width="18" height="18" viewBox="0 0 18 18"><circle cx="9" cy="9" r="8" fill="none" stroke="var(--hybrid)" stroke-width="2"/><path d="M5 9.5l2.5 2.5L13 6.5" fill="none" stroke="var(--hybrid)" stroke-width="2" stroke-linecap="round"/></svg><span>Hybridisation = count σ bonds + lone pairs around the atom; π bonds come from leftover p orbitals.</span></div>
     </div>
-    <div class="rule" style="--ac:var(--ink);margin-top:26px"><b>Next steps:</b> use the overview (<kbd style="font-family:var(--font-mono)">Esc</kbd>) to revisit any weak slide, then move on to Topic 3.5 — Shapes of Molecules, where hybridisation meets VSEPR.</div>
+    <div class="rule" style="--ac:var(--ink);margin-top:26px"><b>Next steps:</b> use the overview (<kbd style="font-family:var(--font-mono)">Esc</kbd>) to revisit any weak slide, then move on to Topic 3.5 — Shapes of Molecules.</div>
     <div class="footer-note">Rebuilt as an interactive deck from onlinelearningsystem.net revision notes · CIE AS Level Chemistry 9701, Topic 3.4.2.</div>
   </div>
 </section>
@@ -606,17 +638,51 @@ table.cmp td:first-child{font-weight:600;white-space:nowrap;background:#fbf9f3}
 #s3 table.cmp{margin-top:0}
 #s3 table.cmp th,#s3 table.cmp td{padding:7px 10px;font-size:clamp(12.5px,1.1vw,14.5px)}
 #s3 .legend{margin-top:6px}
-#s3 .examline{margin-top:12px;padding:12px 18px;font-size:clamp(14px,1.25vw,16.5px)}
+#s3 .examline{margin-top:10px;padding:10px 18px;font-size:clamp(13.5px,1.2vw,16px);line-height:1.45}
+#s3 .stepper{margin:6px 0}
+#s3 .scene3d.sm{height:228px}
+#s3 .legend{display:none}
+#s3 #ovlCap{margin-top:6px;min-height:36px;font-size:14px}
+#s7 .scene3d,#s8 .scene3d{height:382px}
+#s5 h2{margin-bottom:6px}
+#s5 .rule{margin-top:12px;padding:10px 16px;font-size:clamp(14px,1.25vw,16.5px)}
+#s9 .rule{margin-top:12px;padding:10px 16px}
+#s10 h2{margin-bottom:6px}
+#s10 .cols{margin-top:8px}
+#s10 #finalQuiz{max-height:468px;overflow-y:auto;padding-right:8px}
+#s10 .rule{margin-top:10px;padding:10px 16px}
+#s5 .lede{margin-bottom:0}
+#s6 h2{margin-bottom:6px}
+#s6 .cols{margin-top:10px}
+#s6 .card table.cmp th,#s6 .card table.cmp td{padding:6px 10px;font-size:clamp(12.5px,1.1vw,14px)}
+#s6 #predCard{min-height:236px}
+#s6 .rule{margin-top:12px;padding:10px 16px}
+#s5 .card table.cmp td{padding:6px 10px}
+#s5 .card h3{font-size:clamp(15px,1.3vw,17.5px)}
+#hybRule{margin-top:10px}
+#s5 .cols{margin-top:10px}
 /* CSS-3D molecule scene */
 .stage3d{padding:0;overflow:hidden}
-.scene3d{height:390px;perspective:950px;display:grid;place-items:center;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none}
+.scene3d{position:relative;height:390px;perspective:950px;display:grid;place-items:center;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none}
 .scene3d:active{cursor:grabbing}
+.scene3d.sm{height:290px}
+.scene3d.geo3d{height:146px}
+.scene3d.mol3d{height:176px}
+.fb3d{position:absolute;inset:0;display:grid;place-items:center;font:600 13px/1.6 "IBM Plex Mono",monospace;color:var(--ink-soft);text-align:center;padding:0 30px}
+button[disabled]{opacity:.35;pointer-events:none}
+#hybRule{margin-top:14px}
+#ovlCap{min-height:44px;margin-top:8px}
 .rot3d{position:relative;width:0;height:0;transform-style:preserve-3d}
 .e3{position:absolute;left:0;top:0;transition:opacity .5s var(--ease)}
 .draghint{position:absolute;right:14px;bottom:10px;font-family:var(--font-mono);font-size:12px;color:var(--ink-soft);background:color-mix(in srgb,var(--paper) 75%,transparent);padding:4px 10px;border-radius:99px;pointer-events:none}
-@media (max-width:700px){.scene3d{height:320px}}
-#n2Scene{position:relative}
-#n2Scene canvas{position:absolute;inset:0;display:block}
+@media (max-width:700px){.scene3d{height:320px}.scene3d.sm{height:250px}}
+.scene3d canvas{position:absolute;inset:0;display:block}
+.stepovl{position:absolute;left:14px;bottom:12px;max-width:min(66%,480px);padding:9px 14px 10px;border-radius:12px;pointer-events:none;
+background:color-mix(in srgb,var(--paper) 88%,transparent);backdrop-filter:blur(3px);
+box-shadow:0 2px 14px rgba(23,21,15,.10);opacity:0;transform:translateY(6px);transition:opacity .35s var(--ease),transform .35s var(--ease);z-index:3}
+.stepovl.show{opacity:1;transform:translateY(0)}
+.stepovl .st-t{font-family:var(--font-mono);font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--mol);margin-bottom:3px}
+.stepovl .st-x{font-size:13.5px;line-height:1.45;color:var(--ink)}
 .n3lbl{position:absolute;font-family:var(--font-mono);font-weight:700;font-size:13px;color:var(--ink);transform:translate(-50%,0);pointer-events:none;z-index:2}
 </style>
 <script>
@@ -676,6 +742,7 @@ function go(i){
   $("#prevBtn").disabled=i===0;
   $("#nextBtn").disabled=i===slides.length-1;
   if(window.stopN2Auto)window.stopN2Auto();
+  if(window.stopHCNAuto)window.stopHCNAuto();
   slides[i].scrollTop=0;
 }
 function next(){go(Math.min(cur+1,slides.length-1));}
@@ -805,95 +872,67 @@ $$(".flipcard").forEach(c=>{
 
 <script>
 "use strict";
-/* ================= OVERLAP LAB (slide 3) ================= */
-const OVL={svg:$("#ovlSvg"),legend:$("#ovlLegend")};
-const SIG="#2456c8",PI="#e0631a",HYB="#0f7a52",INKC="#17150f";
-function drawOvl(type){
-  OVL.svg.innerHTML="";OVL.legend.innerHTML="";
-  const y=125;
-  axisLine(S("g",{},OVL.svg),30,610,y);
-  const gA=S("g",{class:"ovl"},OVL.svg), gB=S("g",{class:"ovl"},OVL.svg);
-  const setPos=(g,dx)=>{g.style.transition="transform .7s cubic-bezier(.22,.9,.28,1)";g.style.transform=`translateX(${dx}px)`;};
-  let leg=[];
-  if(type==="ss"){
-    nucleus(gA,270,y);nucleus(gB,370,y);
-    sOrb(gA,270,y,54,SIG,.28);sOrb(gB,370,y,54,SIG,.28);
-    T(OVL.svg,240,y-66,"1s");T(OVL.svg,386,y-66,"1s");
-    setPos(gA,-95);setPos(gB,95);
-    leg=[["#2456c8","1s orbital"],["#17150f","nucleus"]];
-    requestAnimationFrame(()=>requestAnimationFrame(()=>{setPos(gA,0);setPos(gB,0);}));
-  }else if(type==="sp"){
-    nucleus(gA,270,y);nucleus(gB,370,y);
-    sOrb(gA,270,y,38,SIG,.3);
-    pOrbX(gB,370,y,58,22,SIG,.3);
-    T(OVL.svg,244,y-52,"1s");T(OVL.svg,448,y-52,"2p");
-    setPos(gA,-95);setPos(gB,95);
-    leg=[["#2456c8","s + p orbitals (end-on)"]];
-    requestAnimationFrame(()=>requestAnimationFrame(()=>{setPos(gA,0);setPos(gB,0);}));
-  }else if(type==="pp"){
-    nucleus(gA,270,y);nucleus(gB,370,y);
-    pOrbX(gA,270,y,58,22,SIG,.3);pOrbX(gB,370,y,58,22,SIG,.3);
-    T(OVL.svg,152,y-52,"2p");T(OVL.svg,448,y-52,"2p");
-    setPos(gA,-95);setPos(gB,95);
-    leg=[["#2456c8","p orbitals overlapping end-on → σ"]];
-    requestAnimationFrame(()=>requestAnimationFrame(()=>{setPos(gA,0);setPos(gB,0);}));
-  }else{ // pi
-    // σ bond already present
-    S("ellipse",{cx:320,cy:y,rx:68,ry:15,fill:SIG,opacity:.3,stroke:SIG,"stroke-width":1.5},OVL.svg);
-    nucleus(OVL.svg,250,y);nucleus(OVL.svg,390,y);
-    pOrbY(gA,250,y,56,24,PI,.3);pOrbY(gB,390,y,56,24,PI,.3);
-    T(OVL.svg,168,30,"2p");T(OVL.svg,442,30,"2p");
-    T(OVL.svg,296,y+22,"σ bond",{"font-size":12,fill:SIG});
-    setPos(gA,-80);setPos(gB,80);
-    leg=[["#2456c8","σ bond (already formed)"],["#e0631a","parallel p orbitals → π"]];
-    requestAnimationFrame(()=>requestAnimationFrame(()=>{setPos(gA,0);setPos(gB,0);}));
-    // overlap shading appears after approach
-    const shade=S("g",{opacity:0,class:"ovl"},OVL.svg);
-    S("ellipse",{cx:320,cy:y-56,rx:96,ry:22,fill:PI,opacity:.45},shade);
-    S("ellipse",{cx:320,cy:y+56,rx:96,ry:22,fill:PI,opacity:.45},shade);
-    T(shade,438,y-50,"π electron density",{fill:PI,"font-weight":600});
-    setTimeout(()=>{shade.style.transition="opacity .5s";shade.style.opacity=1;},650);
-  }
-  leg.forEach(([c,t])=>{const s=document.createElement("span");s.innerHTML=`<i style="background:${c}"></i>${t}`;OVL.legend.appendChild(s);});
+/* ================= OVERLAP LAB (slide 3) — UI; 3D scene lives in the module script ================= */
+const SIG="#0072b2",PI="#d55e00",HYB="#009e73",INKC="#17150f";
+const ovlInfo={
+  ss:{cap:"Two 1s orbitals close in and merge — spherical density piles up right between the nuclei: a σ bond. Deep, on-axis overlap is why σ bonds are the strongest.",leg:[["#0072b2","1s orbital"],["#17150f","nucleus"]]},
+  sp:{cap:"An s orbital meets a p orbital end-on — again the shared density lands on the internuclear axis: a σ bond. Note how the nuclei move closer as the bond forms.",leg:[["#0072b2","s + p orbitals (end-on)"],["#17150f","nucleus"]]},
+  pp:{cap:"Two p orbitals overlap end-on along the axis — the third way to make a σ bond. Maximum overlap along the axis → strong bond, free rotation.",leg:[["#0072b2","p orbitals overlapping end-on → σ"],["#17150f","nucleus"]]},
+  pi:{cap:"The σ bond is already in place. Now parallel p orbitals overlap sideways, above and below the axis — a weaker π bond that locks rotation.",leg:[["#0072b2","σ bond (already formed)"],["#d55e00","parallel p orbitals → π"]]}
+};
+let ovlType="ss";
+function applyOvlUI(type){
+  ovlType=type;window.ovlType=type;
+  $$("#ovlPicker .stp").forEach(x=>x.classList.toggle("on",x.dataset.ovl===type));
+  $("#ovlCap").textContent=ovlInfo[type].cap;
+  const leg=$("#ovlLegend");leg.innerHTML="";
+  ovlInfo[type].leg.forEach(([c,t])=>{const s=document.createElement("span");s.innerHTML=`<i style="background:${c}"></i>${t}`;leg.appendChild(s);});
+  if(typeof window.ovlBuild==="function")window.ovlBuild(type);
 }
 $("#ovlPicker").addEventListener("click",e=>{
-  const b=e.target.closest(".stp");if(!b)return;
-  $$("#ovlPicker .stp").forEach(x=>x.classList.toggle("on",x===b));
-  drawOvl(b.dataset.ovl);
+  const b=e.target.closest(".stp");if(!b)return;applyOvlUI(b.dataset.ovl);
 });
-drawOvl("ss");
+$("#ovlBond").addEventListener("click",()=>{
+  if(typeof window.ovlBuild==="function")window.ovlBuild(ovlType);
+  $("#ovlCap").textContent=ovlInfo[ovlType].cap;
+});
+$("#ovlRot").addEventListener("click",()=>{
+  if(typeof window.ovlDemo!=="function")return;
+  if(ovlType==="pi"){
+    window.ovlDemo("pi");
+    $("#ovlCap").innerHTML="<strong>Try to rotate:</strong> twisting pulls the p orbitals out of alignment — the π overlap fades and would have to <strong>break</strong>. Rotation about a double bond is locked (why E/Z isomerism exists).";
+  }else{
+    window.ovlDemo("sigma");
+    $("#ovlCap").innerHTML="<strong>Try to rotate:</strong> a σ bond is cylindrically symmetric about the axis — spinning the atoms changes nothing. Rotation is <strong>free</strong>.";
+  }
+});
+applyOvlUI("ss");
 
-/* ================= BOND ORDER (slide 4) ================= */
+/* ================= BOND ORDER (slide 4) — UI; 3D scene lives in the module script ================= */
 const ordData={
-  1:{title:"Single bond — e.g. C–C in ethane",body:"<strong>1 σ bond.</strong> The shared pair sits on the axis; the atoms can rotate freely around it. Longest and weakest of the three.",svg:g=>{
-    axisLine(g,60,580,150);nucleus(g,220,150,"C");nucleus(g,420,150,"C");
-    S("ellipse",{cx:320,cy:150,rx:130,ry:30,fill:SIG,opacity:.3,stroke:SIG,"stroke-width":2},g);
-    T(g,300,210,"1 σ",{fill:SIG,"font-weight":600,"font-size":16});
-  }},
-  2:{title:"Double bond — e.g. C=C in ethene",body:"<strong>1 σ + 1 π.</strong> The π bond locks the two p orbitals together, so no rotation — this is why E/Z isomerism exists.",svg:g=>{
-    axisLine(g,60,580,150);nucleus(g,220,150,"C");nucleus(g,420,150,"C");
-    S("ellipse",{cx:320,cy:150,rx:130,ry:26,fill:SIG,opacity:.3,stroke:SIG,"stroke-width":2},g);
-    S("ellipse",{cx:320,cy:78,rx:105,ry:26,fill:PI,opacity:.35,stroke:PI,"stroke-width":2},g);
-    S("ellipse",{cx:320,cy:222,rx:105,ry:26,fill:PI,opacity:.35,stroke:PI,"stroke-width":2},g);
-    T(g,300,200,"1 σ + 1 π",{fill:INKC,"font-weight":600,"font-size":16});
-  }},
-  3:{title:"Triple bond — e.g. N≡N in nitrogen",body:"<strong>1 σ + 2 π.</strong> The second π bond comes from the p orbitals pointing out of the page — at right angles to the first. Shortest and strongest.",svg:g=>{
-    axisLine(g,60,580,150);nucleus(g,220,150,"N");nucleus(g,420,150,"N");
-    S("ellipse",{cx:320,cy:150,rx:130,ry:26,fill:SIG,opacity:.3,stroke:SIG,"stroke-width":2},g);
-    S("ellipse",{cx:320,cy:78,rx:105,ry:26,fill:PI,opacity:.35,stroke:PI,"stroke-width":2},g);
-    S("ellipse",{cx:320,cy:222,rx:105,ry:26,fill:PI,opacity:.35,stroke:PI,"stroke-width":2},g);
-    S("ellipse",{cx:296,cy:150,rx:34,ry:104,fill:"none",stroke:PI,"stroke-width":2,"stroke-dasharray":"7 6",transform:"rotate(-16 320 150)"},g);
-    S("ellipse",{cx:344,cy:150,rx:34,ry:104,fill:"none",stroke:PI,"stroke-width":2,"stroke-dasharray":"7 6",transform:"rotate(16 320 150)"},g);
-    T(g,270,290,"1 σ + 2 π (2nd π shown dashed — out of page)",{fill:INKC,"font-weight":600,"font-size":13.5});
-  }}
+  1:{title:"Single bond — e.g. C–C in ethane",body:"<strong>1 σ bond.</strong> The shared pair sits on the axis; the atoms can rotate freely around it. Longest and weakest of the three."},
+  2:{title:"Double bond — e.g. C=C in ethene",body:"<strong>1 σ + 1 π.</strong> The π bond locks the two p orbitals together, so no rotation — this is why E/Z isomerism exists. The atoms sit closer than in a single bond."},
+  3:{title:"Triple bond — e.g. N≡N in nitrogen",body:"<strong>1 σ + 2 π.</strong> The second π bond comes from the p orbitals at right angles to the first. Shortest and strongest — watch the nuclei pull in closest here."}
+};
+const ordPhaseData={
+  1:[{t:"The orbitals",cap:"Each carbon points one sp³ hybrid along the internuclear axis — its other three hybrids hold the C–H bonds."},
+     {t:"σ bond forms",cap:"The two hybrids overlap end-on → the σ bond. The nuclei pull in to the C–C bond length."}],
+  2:[{t:"The orbitals",cap:"Each carbon is sp² hybridised: one sp² hybrid points along the axis, and one unhybridised p orbital stands vertical."},
+     {t:"σ bond forms",cap:"The sp² hybrids overlap end-on → the σ bond. A σ bond is always the first bond between two atoms."},
+     {t:"π bond forms",cap:"The parallel p orbitals overlap sideways, above and below the axis → the π bond. The p orbitals are used up as the π cloud forms."}],
+  3:[{t:"The orbitals",cap:"Each nitrogen is sp hybridised: one sp hybrid points inward for bonding, the outward one keeps a lone pair, and two p orbitals stay free."},
+     {t:"σ bond forms",cap:"The inward sp hybrids overlap end-on → the σ bond."},
+     {t:"First π bond",cap:"The vertical p orbitals overlap sideways → the first π bond."},
+     {t:"Second π bond",cap:"The remaining p orbitals overlap at right angles to the first → N≡N complete. Each N keeps one lone pair."}]
+};
+window.ordPhase=function(i,n){
+  if(typeof showStepOvl==="function")showStepOvl("#ordStepOvl",i,ordPhaseData[n]);
 };
 function drawOrd(n){
-  const svg=$("#ordSvg");svg.innerHTML="";
-  const g=S("g",{class:"ovl"},svg);g.style.opacity=0;
-  ordData[n].svg(g);
-  requestAnimationFrame(()=>{g.style.transition="opacity .4s";g.style.opacity=1;});
+  window.ordN=n;
   $("#ordCard").innerHTML=`<h3>${ordData[n].title}</h3><p style="margin-top:8px">${ordData[n].body}</p>
   <p style="margin-top:10px;font-family:var(--font-mono);font-size:13px">Bond length ↓ &nbsp;·&nbsp; bond strength ↑ &nbsp;as bond order rises</p>`;
+  if(typeof window.ordBuild==="function")window.ordBuild(+n);
 }
 $("#ordPicker").addEventListener("click",e=>{
   const b=e.target.closest(".stp");if(!b)return;
@@ -921,40 +960,50 @@ const hybData={
 function drawHyb(key){
   const d=hybData[key],svg=$("#hybSvg");svg.innerHTML="";
   const nP={sp:1,sp2:2,sp3:3}[key];
-  const gIn=S("g",{class:"ovl"},svg),gOut=S("g",{class:"ovl"},svg);
   T(svg,60,34,"ATOMIC ORBITALS",{"font-size":11,"font-weight":600,"letter-spacing":"2"});
   T(svg,420,34,"HYBRID ORBITALS",{"font-size":11,"font-weight":600,"letter-spacing":"2"});
-  // inputs
+  // inputs — one animated group per orbital
   const rows=[["s","#8a6d1c"],...Array.from({length:nP},(_,i)=>["p","#2456c8"])];
-  rows.forEach((r,i)=>{
-    const y=70+i*62;
-    S("rect",{x:40,y,width:120,height:46,rx:10,fill:"#fff",stroke:r[1],"stroke-width":2},gIn);
-    T(gIn,92,y+30,r[0],{"font-size":18,"font-weight":600,fill:r[1],"text-anchor":"middle"});
+  const inGs=rows.map((r,i)=>{
+    const y=64+i*54,g=S("g",{},svg);
+    S("rect",{x:40,y,width:120,height:46,rx:10,fill:"#fff",stroke:r[1],"stroke-width":2},g);
+    T(g,100,y+30,r[0],{"font-size":18,"font-weight":600,fill:r[1],"text-anchor":"middle"});
+    return {g,cy:y+23};
   });
   // arrow
-  S("path",{d:"M185 165 h90 m-14 -12 l16 12 -16 12",stroke:INKC,"stroke-width":3,fill:"none","stroke-linecap":"round"},svg);
-  T(svg,192,145,"mix",{"font-size":12});
-  // outputs
+  S("path",{d:"M185 158 h90 m-14 -12 l16 12 -16 12",stroke:INKC,"stroke-width":3,fill:"none","stroke-linecap":"round"},svg);
+  T(svg,192,136,"mix",{"font-size":12});
+  // outputs — hybrids + leftover p, one group per box
+  const outGs=[];
   const nOut={sp:2,sp2:3,sp3:4}[key];
   for(let i=0;i<nOut;i++){
-    const y=52+i*54;
-    S("rect",{x:310,y,width:130,height:40,rx:10,fill:"#d9efe4",stroke:HYB,"stroke-width":2},gOut);
-    T(gOut,375,y+26,key.replace("sp2","sp²").replace("sp3","sp³"),{"font-size":15,"font-weight":600,fill:HYB,"text-anchor":"middle"});
+    const y=48+i*50,g=S("g",{},svg);
+    S("rect",{x:310,y,width:130,height:40,rx:10,fill:"#d9efe4",stroke:HYB,"stroke-width":2},g);
+    T(g,375,y+26,key.replace("sp2","sp²").replace("sp3","sp³"),{"font-size":15,"font-weight":600,fill:HYB,"text-anchor":"middle"});
+    outGs.push(g);
   }
-  // leftover p
   const nLeft={sp:2,sp2:1,sp3:0}[key];
   for(let i=0;i<nLeft;i++){
-    const y=52+nOut*54+i*54;
-    S("rect",{x:480,y,width:130,height:40,rx:10,fill:"#fff",stroke:"#b8b09c","stroke-width":2,"stroke-dasharray":"6 5"},gOut);
-    T(gOut,545,y+26,"p (free for π)",{"font-size":12.5,fill:"#4c4738","text-anchor":"middle"});
+    const y=48+nOut*50+i*50,g=S("g",{},svg);
+    S("rect",{x:480,y,width:130,height:40,rx:10,fill:"#fff",stroke:"#b8b09c","stroke-width":2,"stroke-dasharray":"6 5"},g);
+    T(g,545,y+26,"p (free for π)",{"font-size":12.5,fill:"#4c4738","text-anchor":"middle"});
+    outGs.push(g);
   }
-  gIn.style.opacity=0;gOut.style.opacity=0;
-  gIn.style.transform="translateX(24px)";gOut.style.transform="translateX(-24px)";
+  // animation: inputs slide to the mixing point and dissolve, outputs pop out staggered
+  inGs.forEach(({g})=>{g.style.transition="transform .55s var(--ease),opacity .55s var(--ease)";});
+  outGs.forEach(g=>{g.style.transition="none";g.style.opacity=0;g.style.transform="translateX(36px)";});
   requestAnimationFrame(()=>requestAnimationFrame(()=>{
-    gIn.style.transition="all .45s var(--ease)";gOut.style.transition="all .45s var(--ease) .12s";
-    gIn.style.opacity=1;gOut.style.opacity=1;gIn.style.transform="";gOut.style.transform="";
+    inGs.forEach(({g,cy},i)=>{
+      setTimeout(()=>{g.style.transform=`translate(150px,${158-cy}px) scale(.5)`;g.style.opacity=0;},180+i*110);
+    });
+    outGs.forEach((g,i)=>{
+      setTimeout(()=>{
+        g.style.transition="transform .45s var(--ease),opacity .45s var(--ease)";
+        g.style.opacity=1;g.style.transform="translateX(0)";
+      },320+i*130);
+    });
   }));
-  // card
+  // card (right) + key idea (left, under the stage)
   $("#hybCard").innerHTML=`
     <div class="card">
       <h3><span class="swatch" style="background:${HYB}"></span>${{sp:"sp hybridisation",sp2:"sp² hybridisation",sp3:"sp³ hybridisation"}[key]}</h3>
@@ -965,12 +1014,11 @@ function drawHyb(key){
         <tr><td>Shape</td><td>${d.shape}, <strong>${d.angle}</strong></td></tr>
         <tr><td>Examples</td><td>${d.ex}</td></tr>
       </table>
-      <p style="font-family:var(--font-mono);font-size:11px;font-weight:600;letter-spacing:.12em;margin:14px 0 4px;color:var(--ink-soft)">SHAPE AROUND THE ATOM</p>
-      <svg id="geoSvg" viewBox="0 0 300 170" style="width:100%;max-width:320px" role="img" aria-label="Shape: ${d.shape}"></svg>
-    </div>
-    <div class="rule"><b>Key idea:</b> leftover unhybridised p orbitals are what form π bonds — sp leaves two (triple bond possible), sp² leaves one (double bond), sp³ leaves none (single bonds only).</div>`;
-  const geoSvg=$("#geoSvg"), gg=S("g",{transform:"translate(-158,-140) scale(0.95)"},geoSvg);
-  d.geo(gg);
+    </div>`;
+  $("#hybRule").innerHTML=`<div class="rule"><b>Key idea:</b> leftover unhybridised p orbitals are what form π bonds — sp leaves two (triple bond possible), sp² leaves one (double bond), sp³ leaves none (single bonds only).</div>`;
+  window.hybKey=key;
+  $("#geoCap").innerHTML=`<strong>${d.shape}</strong> · ${d.angle}`;
+  if(typeof window.geoBuild==="function")window.geoBuild(key);
 }
 $("#hybPicker").addEventListener("click",e=>{
   const b=e.target.closest(".stp");if(!b)return;
@@ -996,8 +1044,18 @@ predData.forEach((d,i)=>{
   b.addEventListener("click",()=>{$$("#predPicker .stp").forEach(x=>x.classList.toggle("on",x===b));showPred(i);});
   predPicker.appendChild(b);
 });
+const predMolKeys=["ch4","nh3","h2o","co2","c2h4"];
+const predMolCaps={
+  ch4:"CH₄ — 4 × C–H σ bonds · sp³ · tetrahedral 109.5°",
+  nh3:"NH₃ — 3 σ + 1 lone pair · sp³ · pyramidal 107°",
+  h2o:"H₂O — 2 σ + 2 lone pairs · sp³ · bent 104.5°",
+  co2:"CO₂ — 2 σ + 2 π · sp · linear 180°",
+  c2h4:"C₂H₄ — C=C is 1σ + 1π · sp² · planar 120°"};
 function showPred(i){
   const d=predData[i];
+  window.predKey=predMolKeys[i];
+  const mc=$("#predMolCap");if(mc)mc.textContent=predMolCaps[predMolKeys[i]];
+  if(typeof window.predBuild==="function")window.predBuild(predMolKeys[i]);
   predCard.innerHTML=`
     <h3 style="font-size:22px">${d.f} <span style="font-weight:400;color:var(--ink-soft);font-size:15px">· ${d.name} — look at <strong>${d.atom}</strong></span></h3>
     <p style="margin-top:6px">Count first, then reveal the answer.</p>
@@ -1020,79 +1078,97 @@ function showPred(i){
 }
 showPred(0);
 
-/* ================= N₂ BUILDER (slide 7) ================= */
-/* The N₂ model is a real three.js renderer — see the module script before </body>. */
+/* ================= N₂ BUILDER (slide 7) — UI; 3D scene lives in the module script ================= */
+const n2StepsData=[
+  {t:"1 · The orbitals",cap:"Each N atom: one 2s + one 2p mix into two sp hybrids (pointing along the axis). Two p orbitals stay free — one vertical, one out of the page."},
+  {t:"2 · The σ bond",cap:"The two inward sp hybrids overlap end-on → the N–N σ bond. Watch the nuclei pull closer as the shared pair settles between them."},
+  {t:"3 · First π bond",cap:"The vertical p orbitals overlap sideways above and below the axis → the first π bond."},
+  {t:"4 · Second π bond",cap:"The remaining p orbitals (out of the page) overlap sideways too → a second π bond at right angles to the first. N≡N triple bond complete."},
+  {t:"5 · Lone pairs",cap:"The outward sp hybrid on each N keeps a lone pair. Each N: 1σ + 2π + one lone pair."},
+];
+let n2AutoT=null;
+window.stopN2Auto=function(){if(n2AutoT){clearInterval(n2AutoT);n2AutoT=null;const b=$("#n2Auto");if(b)b.textContent="▶ Play steps";}};
+function showStepOvl(sel,idx,data){
+  const el=$(sel);if(!el)return;
+  el.classList.remove("show");
+  setTimeout(()=>{
+    el.innerHTML=`<div class="st-t">${data[idx].t}</div><div class="st-x">${data[idx].cap}</div>`;
+    el.classList.add("show");
+  },220);
+}
+function drawN2(step){
+  $$("#n2Steps .stp").forEach((x,i)=>x.classList.toggle("on",i===step));
+  $("#n2Cap").textContent=n2StepsData[step].cap;
+  showStepOvl("#n2StepOvl",step,n2StepsData);
+  if(typeof window.n2SetTargets==="function")window.n2SetTargets(step);
+}
+n2StepsData.forEach((d,i)=>{
+  const b=document.createElement("button");b.className="stp";b.textContent=d.t;
+  b.addEventListener("click",()=>{window.stopN2Auto();drawN2(i);});
+  $("#n2Steps").appendChild(b);
+});
+$("#n2Auto").addEventListener("click",()=>{
+  if(n2AutoT){window.stopN2Auto();return;}
+  let i=0;drawN2(0);
+  const b=$("#n2Auto");b.textContent="⏸ Stop";
+  n2AutoT=setInterval(()=>{i++;if(i>4){window.stopN2Auto();return;}drawN2(i);},5000);
+});
+$("#n2Reset").addEventListener("click",()=>{if(typeof window.n2Reset==="function")window.n2Reset();});
+drawN2(0);
 
-/* ================= HCN BUILDER (slide 8) ================= */
-const hcnSvg=$("#hcnSvg"),hcnCap=$("#hcnCap");
+/* ================= HCN BUILDER (slide 8) — UI; 3D scene lives in the module script ================= */
 const hcnStepsData=[
   {t:"1 · The orbitals",cap:"Carbon hybridises 2s + one 2p into two sp hybrids (pointing at H and N). Two p orbitals stay free. Nitrogen does the same: one sp points at C, the other holds its lone pair."},
-  {t:"2 · C–H σ bond",cap:"Hydrogen's 1s orbital overlaps end-on with carbon's sp hybrid → the C–H σ bond."},
-  {t:"3 · C–N σ bond",cap:"Carbon's other sp hybrid overlaps end-on with nitrogen's sp hybrid → the C–N σ bond. The skeleton H–C–N is linear (180°)."},
+  {t:"2 · C–H σ bond",cap:"Hydrogen's 1s orbital overlaps end-on with carbon's sp hybrid → the C–H σ bond. Watch H close in on C as the bond forms."},
+  {t:"3 · C–N σ bond",cap:"Carbon's other sp hybrid overlaps end-on with nitrogen's sp hybrid → the C–N σ bond. N pulls in too — the skeleton H–C–N is linear (180°)."},
   {t:"4 · Two π bonds",cap:"The two leftover p orbitals on C overlap sideways with the two on N → two π bonds at right angles. C≡N triple bond complete."},
   {t:"5 · Lone pair on N",cap:"Nitrogen's outward sp hybrid keeps a lone pair — HCN is linear, and N carries the non-bonding pair."},
 ];
-hcnStepsData.forEach((d,i)=>{
-  const b=document.createElement("button");b.className="stp";b.textContent=d.t;
-  b.addEventListener("click",()=>drawHCN(i));
-  $("#hcnSteps").appendChild(b);
-});
+let hcnAutoT=null;
+window.stopHCNAuto=function(){if(hcnAutoT){clearInterval(hcnAutoT);hcnAutoT=null;const b=$("#hcnAuto");if(b)b.textContent="▶ Play steps";}};
 function drawHCN(step){
   $$("#hcnSteps .stp").forEach((x,i)=>x.classList.toggle("on",i===step));
-  hcnCap.textContent=hcnStepsData[step].cap;
-  hcnSvg.innerHTML="";
-  const y=170,xH=110,xC=330,xN=550;
-  axisLine(hcnSvg,40,660,y);
-  const gCH=S("g",{class:"ovl"},hcnSvg),gCN=S("g",{class:"ovl"},hcnSvg),gPi=S("g",{class:"ovl"},hcnSvg),gLP=S("g",{class:"ovl"},hcnSvg),gNuc=S("g",{},hcnSvg);
-  if(step>=0){
-    sOrb(gCH,xH,y,34,"#8a8368",.35);
-    T(hcnSvg,xH-14,y-48,"1s",{"font-size":12});
-    // C: sp hybrids along axis
-    spOrb(gCN,xC,y,-1,SIG,.3,56,15);spOrb(gCN,xC,y,+1,SIG,.3,56,15);
-    // N: sp hybrids
-    spOrb(gCN,xN,y,-1,SIG,.3,56,15);spOrb(gLP,xN,y,+1,SIG,.3,56,15);
-    // free p orbitals on C and N (vertical solid + perpendicular dashed)
-    [xC,xN].forEach(x=>{
-      pOrbY(gPi,x,y,70,20,PI,.3);
-      S("circle",{cx:x,cy:y,r:24,fill:PI,opacity:.12,stroke:PI,"stroke-width":2,"stroke-dasharray":"6 5"},gPi);
-      S("circle",{cx:x,cy:y-8,r:2.4,fill:PI},gPi);S("circle",{cx:x,cy:y+8,r:2.4,fill:PI},gPi);
-    });
-    T(hcnSvg,xC-58,y-88,"2 × 2p free",{"font-size":12,fill:PI});
-  }
-  nucleus(gNuc,xH,y,"H");nucleus(gNuc,xC,y,"C");nucleus(gNuc,xN,y,"N");
-  if(step>=1){
-    S("ellipse",{cx:(xH+xC)/2,cy:y,rx:66,ry:20,fill:SIG,opacity:.5,stroke:SIG,"stroke-width":2},gCH);
-    T(hcnSvg,(xH+xC)/2-30,y+48,"σ (C–H)",{"font-size":13,"font-weight":700,fill:SIG});
-  }
-  if(step>=2){
-    S("ellipse",{cx:(xC+xN)/2,cy:y,rx:78,ry:22,fill:SIG,opacity:.5,stroke:SIG,"stroke-width":2},gCN);
-    T(hcnSvg,(xC+xN)/2-30,y+52,"σ (C–N)",{"font-size":13,"font-weight":700,fill:SIG});
-  }
-  if(step>=3){
-    S("ellipse",{cx:(xC+xN)/2,cy:y-60,rx:92,ry:22,fill:PI,opacity:.45,stroke:PI,"stroke-width":1.5},gPi);
-    S("ellipse",{cx:(xC+xN)/2,cy:y+60,rx:92,ry:22,fill:PI,opacity:.45,stroke:PI,"stroke-width":1.5},gPi);
-    S("ellipse",{cx:(xC+xN)/2-12,cy:y,rx:26,ry:88,fill:PI,opacity:.2,stroke:PI,"stroke-width":2,"stroke-dasharray":"7 6"},gPi);
-    S("ellipse",{cx:(xC+xN)/2+12,cy:y,rx:26,ry:88,fill:PI,opacity:.2,stroke:PI,"stroke-width":2,"stroke-dasharray":"7 6"},gPi);
-    T(hcnSvg,xN+40,y-56,"2 × π",{fill:PI,"font-weight":700,"font-size":15});
-  }
-  if(step>=4){
-    S("ellipse",{cx:xN+56,cy:y,rx:32,ry:19,fill:HYB,opacity:.35,stroke:HYB,"stroke-width":2},gLP);
-    dots(gLP,xN+56,y);
-    T(hcnSvg,xN+22,y+50,"lone pair",{"font-size":12,fill:HYB,"font-weight":600});
-  }
-  [gCH,gCN,gPi,gLP].forEach(g=>{g.style.opacity=0;requestAnimationFrame(()=>requestAnimationFrame(()=>{g.style.transition="opacity .45s";g.style.opacity="1";}));});
+  $("#hcnCap").textContent=hcnStepsData[step].cap;
+  showStepOvl("#hcnStepOvl",step,hcnStepsData);
+  if(typeof window.hcnSet==="function")window.hcnSet(step);
 }
+hcnStepsData.forEach((d,i)=>{
+  const b=document.createElement("button");b.className="stp";b.textContent=d.t;
+  b.addEventListener("click",()=>{window.stopHCNAuto();drawHCN(i);});
+  $("#hcnSteps").appendChild(b);
+});
+$("#hcnAuto").addEventListener("click",()=>{
+  if(hcnAutoT){window.stopHCNAuto();return;}
+  let i=0;drawHCN(0);
+  const b=$("#hcnAuto");b.textContent="⏸ Stop";
+  hcnAutoT=setInterval(()=>{i++;if(i>4){window.stopHCNAuto();return;}drawHCN(i);},5000);
+});
+$("#hcnReset").addEventListener("click",()=>{if(typeof window.hcnReset==="function")window.hcnReset();});
 drawHCN(0);
 /* HCN identify quiz */
 const hcnAnswers={ch:["σ bond","Hydrogen's 1s overlaps carbon's sp end-on — pure σ."],cn1:["σ bond","The first C–N bond is the sp–sp end-on overlap — σ."],cn2:["π bonds","The 2nd and 3rd C–N bonds are the two sideways p overlaps — π, at right angles."]};
 $("#hcnQuizBtns").addEventListener("click",e=>{
   const b=e.target.closest("[data-q]");if(!b)return;
+  window.stopHCNAuto();
   const [a,exp]=hcnAnswers[b.dataset.q];
   const fb=$("#hcnQfb");
   fb.className="qfb ok";
   fb.innerHTML=`${b.textContent.trim()} → <strong>${a}</strong><span class="exp">${exp}</span>`;
   drawHCN(4); // ensure full molecule shown
+  if(typeof window.hcnPulse==="function")window.hcnPulse(b.dataset.q);
 });
+
+/* Disable 3D-only controls only once the module has finished (or after a 12s grace period) */
+let __disT=0;
+const __disIv=setInterval(()=>{
+  __disT+=500;
+  if(!window.__threeReady&&__disT<12000)return;
+  clearInterval(__disIv);
+  [["#ovlBond","ovlBuild"],["#ovlRot","ovlDemo"],["#n2Reset","n2Reset"],["#hcnReset","hcnReset"]].forEach(([sel,hook])=>{
+    if(typeof window[hook]!=="function"){const b=$(sel);if(b){b.disabled=true;b.title="3D model unavailable — needs an internet connection";}}
+  });
+},500);
+
 
 /* ================= INIT ================= */
 go(0);
@@ -1109,178 +1185,430 @@ go(0);
 import * as THREE from 'three';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 
-const n2Cap=document.querySelector("#n2Cap");
-const n2StepsData=[
-  {t:"1 · The orbitals",cap:"Each nitrogen (1s² 2s² 2p³) hybridises one 2s with one 2p into two sp hybrids pointing along the axis. Two p orbitals per atom stay unhybridised — one vertical, one out of the page. Drag the model to see them."},
-  {t:"2 · σ bond forms",cap:"The inward-pointing sp hybrids overlap end-on → one σ bond directly between the nuclei."},
-  {t:"3 · First π bond",cap:"The vertical p orbitals overlap sideways → the first π bond, with electron density above and below the axis."},
-  {t:"4 · Second π bond",cap:"The remaining p orbitals overlap sideways → a second π bond at right angles to the first. Rotate the model 90° about the bond axis to see one π pair edge-on. The bond is now triple: 1σ + 2π."},
-  {t:"5 · Lone pairs",cap:"Each nitrogen keeps its outward sp hybrid as a non-bonding lone pair. This is why N₂ can act as a Lewis base — and why it's so unreactive (that triple bond is very strong)."},
-];
-let n2AutoT=null;
-window.stopN2Auto=function(){
-  if(n2AutoT){clearInterval(n2AutoT);n2AutoT=null;document.querySelector("#n2Auto").textContent="▶ Play steps";}
-};
-/* stepper UI lives outside the 3D try/catch so steps + captions work even if WebGL is unavailable */
-function applyStepUI(step){
-  document.querySelectorAll("#n2Steps .stp").forEach((x,i)=>x.classList.toggle("on",i===step));
-  n2Cap.textContent=n2StepsData[step].cap;
-}
-window.drawN2=applyStepUI;
-n2StepsData.forEach((d,i)=>{
-  const b=document.createElement("button");b.className="stp";b.textContent=d.t;
-  b.addEventListener("click",()=>window.drawN2(i));
-  document.querySelector("#n2Steps").appendChild(b);
-});
-document.querySelector("#n2Auto").addEventListener("click",()=>{
-  if(n2AutoT){window.stopN2Auto();return;}
-  let i=0;window.drawN2(0);document.querySelector("#n2Auto").textContent="⏸ Stop";
-  n2AutoT=setInterval(()=>{i++;if(i>4){window.stopN2Auto();return;}window.drawN2(i);},1900);
-});
-applyStepUI(0);
-try{
-const wrap=document.getElementById("n2Scene");
+/* ---------- shared 3D stage framework ---------- */
 const reduced=matchMedia("(prefers-reduced-motion: reduce)").matches;
-const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});
-renderer.setPixelRatio(Math.min(devicePixelRatio,2));
-renderer.setSize(wrap.clientWidth,wrap.clientHeight);
-wrap.appendChild(renderer.domElement);
-document.getElementById("n2Fallback").remove();
-
-const scene=new THREE.Scene();
-const camera=new THREE.PerspectiveCamera(38,wrap.clientWidth/wrap.clientHeight,1,3000);
-const CAM0=new THREE.Vector3(0,26,470);
-camera.position.copy(CAM0);
-scene.add(new THREE.AmbientLight(0xffffff,1.0));
-const d1=new THREE.DirectionalLight(0xffffff,1.1);d1.position.set(2,3,4);scene.add(d1);
-const d2=new THREE.DirectionalLight(0xfff2e0,.35);d2.position.set(-3,-2,-3);scene.add(d2);
-
-const controls=new OrbitControls(camera,renderer.domElement);
-controls.enableZoom=false;controls.enablePan=false;
-controls.enableDamping=true;controls.dampingFactor=.08;controls.rotateSpeed=.55;
-controls.autoRotate=false;controls.autoRotateSpeed=.9;
-let userGrabbed=false;
-controls.addEventListener("start",()=>{userGrabbed=true;controls.autoRotate=false;});
-
-const mol=new THREE.Group();scene.add(mol);
-const SIGC=0x2456c8,PIC=0xe0631a,HYBC=0x0f7a52;
-
-/* soft-cloud fresnel material — lobes look like electron density, not plastic */
+const SIGC=0x0072b2,PIC=0xd55e00,HYBC=0x009e73;   // bond density — Okabe–Ito journal palette (deep)
+const SIGO=0xa9cfe8,PIO=0xf3c39b,HORB=0xcfc9ba;    // atomic orbitals — pale tints of the same hues
 const vsh=`varying vec3 vN;varying vec3 vV;
 void main(){vN=normalize(normalMatrix*normal);
 vec4 mv=modelViewMatrix*vec4(position,1.0);vV=normalize(-mv.xyz);
 gl_Position=projectionMatrix*mv;}`;
 const fsh=`uniform vec3 uColor;uniform float uO;varying vec3 vN;varying vec3 vV;
-void main(){float f=pow(abs(dot(normalize(vN),normalize(vV))),1.15);
-float a=mix(0.05,1.0,f)*uO;if(a<0.004)discard;gl_FragColor=vec4(uColor,a);}`;
-function cloudMat(hex,op){
-  return new THREE.ShaderMaterial({transparent:true,depthWrite:false,side:THREE.FrontSide,
-    uniforms:{uColor:{value:new THREE.Color(hex)},uO:{value:op}},vertexShader:vsh,fragmentShader:fsh});
-}
+void main(){float f=pow(abs(dot(normalize(vN),normalize(vV))),1.25);
+float a=mix(0.30,0.96,f)*uO;if(a<0.004)discard;
+gl_FragColor=vec4(uColor*(0.86+0.20*f),a);}`;
 const sphereGeo=new THREE.SphereGeometry(1,48,32);
-const clouds=[];
-function lobe(x,y,z,sx,sy,sz,hex,op,st=1){
-  const m=new THREE.Mesh(sphereGeo,cloudMat(hex,op));
-  m.position.set(x,y,z);m.scale.set(sx*st,sy*st,sz*st);
-  m.userData={o:op,t:op,s:st,st,bs:new THREE.Vector3(sx,sy,sz),c:new THREE.Color(hex),ct:new THREE.Color(hex)};
-  mol.add(m);clouds.push(m);return m;
-}
-
-/* nuclei */
 const nucMat=new THREE.MeshStandardMaterial({color:0x191712,roughness:.32,metalness:.3});
-[-1,1].forEach(s=>{
-  const n=new THREE.Mesh(new THREE.SphereGeometry(11.5,32,24),nucMat);
-  n.position.set(s*95,0,0);mol.add(n);
-});
-/* bond axis */
-const axGeo=new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(-215,0,0),new THREE.Vector3(215,0,0)]);
-const axis=new THREE.Line(axGeo,new THREE.LineDashedMaterial({color:0xb8b09c,dashSize:9,gapSize:7}));
-axis.computeLineDistances();
-mol.add(axis);
-
-/* groups of lobes */
-const G={spOut:[],spIn:[],pY:[],pZ:[],sig:[],piY:[],piZ:[],dots:[]};
-[-1,1].forEach(s=>{
-  G.spOut.push(lobe(s*142,0,0, 46,15,15, SIGC,.5));       // outer sp hybrid, big lobe
-  G.spOut.push(lobe(s*80,0,0, 13,8,8, SIGC,.45));        // its small back lobe
-  G.spIn.push(lobe(s*56,0,0, 36,13,13, SIGC,.5));        // inner sp hybrid
-  G.pY.push(lobe(s*95, 47,0, 15,42,15, PIC,.5));         // vertical p dumbbell
-  G.pY.push(lobe(s*95,-47,0, 15,42,15, PIC,.5));
-  G.pZ.push(lobe(s*95,0, 47, 15,15,42, PIC,.5));         // out-of-page p dumbbell
-  G.pZ.push(lobe(s*95,0,-47, 15,15,42, PIC,.5));
-});
-G.sig.push(lobe(0,0,0, 96,20,20, SIGC,.62,.01));         // σ bond (starts shrunk)
-[-1,1].forEach(t=>{
-  G.piY.push(lobe(0,t*58,0, 96,17,17, PIC,.55,.01));     // π above/below
-  G.piZ.push(lobe(0,0,t*58, 96,17,17, PIC,.55,.01));     // π front/back — right angles
-});
-[-1,1].forEach(s=>{                                      // lone-pair electron dots
-  [-1,1].forEach(t=>{
-    const d=new THREE.Mesh(new THREE.SphereGeometry(4.4,16,12),new THREE.MeshBasicMaterial({color:0x17150f,transparent:true,opacity:0}));
-    d.position.set(s*146,t*9,15);d.userData={t:0,o:0};mol.add(d);G.dots.push(d);
-  });
-});
-
-/* nucleus labels (screen-space, always legible) */
-const lbls=[-1,1].map(s=>{
-  const el=document.createElement("div");el.className="n3lbl";el.textContent="N";
-  wrap.appendChild(el);return {el,x:s*95};
-});
-
-function setTargets(step){
-  const T=(arr,op,st)=>arr.forEach(m=>{m.userData.t=op;if(st!==undefined)m.userData.st=st;});
-  T(G.spIn, step>=1?.1:.5);
-  T(G.pY,  step>=2?.07:.5);
-  T(G.pZ,  step>=3?.07:.5);
-  T(G.sig, step>=1?.62:0, step>=1?1:.01);
-  T(G.piY, step>=2?.55:0, step>=2?1:.01);
-  T(G.piZ, step>=3?.55:0, step>=3?1:.01);
-  G.spOut.forEach(m=>m.userData.ct.set(step>=4?HYBC:SIGC));
-  G.dots.forEach(d=>d.userData.t=step>=4?1:0);
+function cloudMat(hex,op){return new THREE.ShaderMaterial({vertexShader:vsh,fragmentShader:fsh,transparent:true,depthWrite:false,side:THREE.DoubleSide,uniforms:{uColor:{value:new THREE.Color(hex)},uO:{value:op}}});}
+const STAGES=[];
+function makeStage(wrapId,slideId,camY,camZ){
+  const wrap=document.getElementById(wrapId);if(!wrap)return null;
+  const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});
+  renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+  renderer.setSize(wrap.clientWidth,wrap.clientHeight);
+  wrap.appendChild(renderer.domElement);
+  const fb=wrap.querySelector(".fb3d");if(fb)fb.remove();
+  const scene=new THREE.Scene();
+  const camera=new THREE.PerspectiveCamera(38,wrap.clientWidth/wrap.clientHeight,1,3000);
+  camera.position.set(0,camY,camZ);
+  scene.add(new THREE.AmbientLight(0xffffff,1.0));
+  const d1=new THREE.DirectionalLight(0xffffff,1.1);d1.position.set(2,3,4);scene.add(d1);
+  const d2=new THREE.DirectionalLight(0xfff2e0,.35);d2.position.set(-3,-2,-3);scene.add(d2);
+  const controls=new OrbitControls(camera,renderer.domElement);
+  controls.enableZoom=false;controls.enablePan=false;controls.enableDamping=true;
+  controls.dampingFactor=.08;controls.rotateSpeed=.55;controls.autoRotateSpeed=.8;
+  const st={wrap,renderer,scene,camera,cam0:camera.position.clone(),controls,mol:new THREE.Group(),
+            clouds:[],slide:document.getElementById(slideId),userGrabbed:false,spin:false,update:null,labels:[]};
+  scene.add(st.mol);
+  controls.addEventListener("start",()=>{st.userGrabbed=true;st.spin=false;});
+  STAGES.push(st);
+  return st;
 }
-const baseDrawN2=window.drawN2;
-window.drawN2=function(step){baseDrawN2(step);setTargets(step);};
-document.querySelector("#n2Reset").addEventListener("click",()=>{
-  userGrabbed=true;controls.autoRotate=false;
-  camera.position.copy(CAM0);controls.target.set(0,0,0);controls.update();
-});
-
-window.drawN2(0);
-const s7=document.querySelector("#s7");
-const v3=new THREE.Vector3();
+function lobe(st,parent,x,y,z,sx,sy,sz,hex,op,sc=1){
+  const m=new THREE.Mesh(sphereGeo,cloudMat(hex,op));
+  m.position.set(x,y,z);m.scale.set(sx*sc,sy*sc,sz*sc);
+  m.userData={o:op,t:op,s:sc,st:sc,o0:op,bs:new THREE.Vector3(sx,sy,sz),ct:new THREE.Color(hex)};
+  (parent||st.mol).add(m);st.clouds.push(m);
+  return m;
+}
+function nuc(st,parent,x,r,label){
+  const n=new THREE.Mesh(new THREE.SphereGeometry(r,32,24),nucMat);
+  n.position.set(x,0,0);(parent||st.mol).add(n);
+  if(label){
+    const el=document.createElement("div");el.className="n3lbl";el.textContent=label;
+    st.wrap.appendChild(el);st.labels.push({el,obj:n,r});
+  }
+  return n;
+}
+function ball(st,parent,x,y,z,r,label){
+  const n=new THREE.Mesh(new THREE.SphereGeometry(r,28,20),nucMat);
+  n.position.set(x,y,z);(parent||st.mol).add(n);
+  if(label){
+    const el=document.createElement("div");el.className="n3lbl";el.textContent=label;
+    st.wrap.appendChild(el);st.labels.push({el,obj:n,r});
+  }
+  return n;
+}
+function axis(st,len){
+  const g=new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(-len,0,0),new THREE.Vector3(len,0,0)]);
+  const l=new THREE.Line(g,new THREE.LineDashedMaterial({color:0xb8b09c,dashSize:9,gapSize:7}));
+  l.computeLineDistances();st.mol.add(l);return l;
+}
+function clearStage(st){
+  [...st.mol.children].forEach(c=>st.mol.remove(c));
+  st.clouds.length=0;
+  st.labels.forEach(L=>L.el.remove());st.labels.length=0;
+  st.mol.rotation.set(0,0,0);st.update=null;st.spin=false;
+}
+function resetView(st){st.userGrabbed=true;st.spin=false;st.camera.position.copy(st.cam0);st.controls.target.set(0,0,0);st.controls.update();}
+const _v=new THREE.Vector3();
 function tick(){
   requestAnimationFrame(tick);
-  const active=s7.classList.contains("active");
-  if(!active)return;
-  if(wrap.clientWidth!==renderer.domElement.clientWidth){
-    renderer.setSize(wrap.clientWidth,wrap.clientHeight);
-    camera.aspect=wrap.clientWidth/wrap.clientHeight;camera.updateProjectionMatrix();
+  for(const st of STAGES){
+    if(!st.slide||!st.slide.classList.contains("active"))continue;
+    const w=st.wrap.clientWidth,h=st.wrap.clientHeight;
+    if(w!==st._w||h!==st._h){st._w=w;st._h=h;st.renderer.setSize(w,h);st.camera.aspect=w/h;st.camera.updateProjectionMatrix();}
+    st.controls.autoRotate=!st.userGrabbed&&!reduced;
+    st.controls.update();
+    if(st.spin)st.mol.rotation.x+=0.05;
+    for(const m of st.clouds){
+      const u=m.userData;
+      u.o+=(u.t-u.o)*.1;u.s+=(u.st-u.s)*.12;
+      m.material.uniforms.uO.value=u.o;
+      m.material.uniforms.uColor.value.lerp(u.ct,.1);
+      m.scale.set(u.bs.x*u.s,u.bs.y*u.s,u.bs.z*u.s);
+      m.visible=u.o>.005;
+    }
+    if(st.update)st.update();
+    for(const L of st.labels){
+      L.obj.getWorldPosition(_v);_v.project(st.camera);
+      L.el.style.left=((_v.x*.5+.5)*w)+"px";
+      L.el.style.top=((-_v.y*.5+.5)*h+L.r+10)+"px";
+      L.el.style.display=_v.z<1?"block":"none";
+    }
+    st.renderer.render(st.scene,st.camera);
   }
-  controls.autoRotate=!userGrabbed&&!reduced;
-  controls.update();
-  clouds.forEach(m=>{
-    const u=m.userData;
-    u.o+=(u.t-u.o)*.1;u.s+=(u.st-u.s)*.12;
-    m.material.uniforms.uO.value=u.o;
-    m.material.uniforms.uColor.value.lerp(u.ct,.1);
-    m.scale.set(u.bs.x*u.s,u.bs.y*u.s,u.bs.z*u.s);
-    m.visible=u.o>.005;
-  });
-  G.dots.forEach(d=>{const u=d.userData;u.o+=(u.t-u.o)*.12;d.material.opacity=u.o;d.visible=u.o>.02;});
-  lbls.forEach(L=>{
-    v3.set(L.x,0,0).project(camera);
-    L.el.style.left=((v3.x*.5+.5)*wrap.clientWidth)+"px";
-    L.el.style.top=((-v3.y*.5+.5)*wrap.clientHeight+18)+"px";
-    L.el.style.display=v3.z<1?"block":"none";
-  });
-  renderer.render(scene,camera);
 }
+
+function guard(wrapId,fn){
+  try{fn();}catch(err){
+    console.error("3D init failed for "+wrapId,err);
+    const w=document.getElementById(wrapId),f=w&&w.querySelector(".fb3d");
+    if(f)f.innerHTML="3D model could not start on this browser.<br>The step buttons and notes still work.";
+  }
+}
+guard("n2Scene",function(){
+  /* ============ N₂ (slide 7) — atoms start apart, nuclei close in as bonds form ============ */
+  const n2=makeStage("n2Scene","s7",26,470);
+  n2.aL=new THREE.Group();n2.aR=new THREE.Group();n2.mol.add(n2.aL,n2.aR);
+  axis(n2,215);
+  nuc(n2,n2.aL,0,11.5,"N");nuc(n2,n2.aR,0,11.5,"N");
+  const n2G={spOut:[],spIn:[],pY:[],pZ:[],sig:[],piY:[],piZ:[],dots:[]};
+  [[n2.aL,1],[n2.aR,-1]].forEach(([g,sg])=>{
+    n2G.spOut.push(lobe(n2,g,-sg*47,0,0,46,15,15,SIGO,.8));
+    n2G.spOut.push(lobe(n2,g,sg*15,0,0,13,8,8,SIGO,.7));
+    n2G.spIn.push(lobe(n2,g,sg*39,0,0,36,13,13,SIGO,.8));
+    [1,-1].forEach(t=>{
+      n2G.pY.push(lobe(n2,g,0,t*47,0,15,42,15,PIO,.8));
+      n2G.pZ.push(lobe(n2,g,0,0,t*47,15,15,42,PIO,.8));
+    });
+  });
+  n2G.sig.push(lobe(n2,null,0,0,0,96,20,20,SIGC,.88,.01));
+  [1,-1].forEach(t=>{
+    n2G.piY.push(lobe(n2,null,0,t*58,0,96,17,17,PIC,.82,.01));
+    n2G.piZ.push(lobe(n2,null,0,0,t*58,96,17,17,PIC,.82,.01));
+  });
+  [[n2.aL,1],[n2.aR,-1]].forEach(([g,sg])=>{[1,-1].forEach(t=>{
+    const d=new THREE.Mesh(new THREE.SphereGeometry(4.4,16,12),new THREE.MeshBasicMaterial({color:0x17150f,transparent:true,opacity:0}));
+    d.position.set(-sg*51,t*9,15);d.userData={t:0,o:0};g.add(d);n2G.dots.push(d);
+  });});
+  n2.d=152;n2.dt=152; // half-separation: 152 apart at rest, 95 when bonded
+  n2.update=function(){
+    n2.d+=(n2.dt-n2.d)*.06;
+    n2.aL.position.x=-n2.d;n2.aR.position.x=n2.d;
+    n2G.dots.forEach(d=>{const u=d.userData;u.o+=(u.t-u.o)*.12;d.material.opacity=u.o;d.visible=u.o>.02;});
+  };
+  window.n2SetTargets=function(step){
+    const T=(arr,op,st)=>arr.forEach(m=>{m.userData.t=op;if(st!==undefined)m.userData.st=st;});
+    n2.dt=step>=1?95:152; // nuclei approach as the σ bond forms
+    T(n2G.spIn,step>=1?.2:.5);
+    T(n2G.pY,step>=2?.12:.5);
+    T(n2G.pZ,step>=3?.12:.5);
+    T(n2G.sig,step>=1?.88:0,step>=1?1:.01);
+    T(n2G.piY,step>=2?.82:0,step>=2?1:.01);
+    T(n2G.piZ,step>=3?.82:0,step>=3?1:.01);
+    n2G.spOut.forEach(m=>m.userData.ct.set(step>=4?HYBC:SIGO));
+    n2G.dots.forEach(d=>d.userData.t=step>=4?1:0);
+  };
+  window.n2Reset=()=>resetView(n2);
+  window.n2SetTargets(0);
+
+});
+guard("hcnScene",function(){
+  /* ============ HCN (slide 8) — same treatment ============ */
+  const hcn=makeStage("hcnScene","s8",26,540);
+  hcn.H=new THREE.Group();hcn.C=new THREE.Group();hcn.N=new THREE.Group();
+  hcn.mol.add(hcn.H,hcn.C,hcn.N);
+  axis(hcn,290);
+  nuc(hcn,hcn.H,0,9,"H");nuc(hcn,hcn.C,0,11.5,"C");nuc(hcn,hcn.N,0,11.5,"N");
+  const hG={hS:[],cSp:[],nSp:[],nOut:[],pY:[],pZ:[],sigCH:[],sigCN:[],piY:[],piZ:[],dots:[]};
+  // H 1s sphere
+  hG.hS.push(lobe(hcn,hcn.H,0,0,0,34,34,34,HORB,.78));
+  // C: two sp hybrids along the axis (toward H at -x, toward N at +x) + free pY,pZ
+  hG.cSp.push(lobe(hcn,hcn.C,-39,0,0,36,13,13,SIGO,.8));
+  hG.cSp.push(lobe(hcn,hcn.C,14,0,0,12,8,8,SIGO,.7));
+  hG.cSp.push(lobe(hcn,hcn.C,39,0,0,36,13,13,SIGO,.8));
+  hG.cSp.push(lobe(hcn,hcn.C,-14,0,0,12,8,8,SIGO,.7));
+  // N: sp toward C + outward sp (lone pair hybrid) + free pY,pZ
+  hG.nSp.push(lobe(hcn,hcn.N,-39,0,0,36,13,13,SIGO,.8));
+  hG.nSp.push(lobe(hcn,hcn.N,14,0,0,12,8,8,SIGO,.7));
+  hG.nOut.push(lobe(hcn,hcn.N,47,0,0,46,15,15,SIGO,.8));
+  hG.nOut.push(lobe(hcn,hcn.N,-15,0,0,13,8,8,SIGO,.7));
+  [[hcn.C],[hcn.N]].forEach(([g])=>{
+    [1,-1].forEach(t=>{
+      hG.pY.push(lobe(hcn,g,0,t*47,0,15,42,15,PIO,.8));
+      hG.pZ.push(lobe(hcn,g,0,0,t*47,15,15,42,PIO,.8));
+    });
+  });
+  // bonds (bonded geometry: H -152, C 0, N +138)
+  hG.sigCH.push(lobe(hcn,null,-76,0,0,58,16,16,SIGC,.88,.01));
+  hG.sigCN.push(lobe(hcn,null,69,0,0,66,18,18,SIGC,.88,.01));
+  [1,-1].forEach(t=>{
+    hG.piY.push(lobe(hcn,null,69,t*54,0,64,15,15,PIC,.82,.01));
+    hG.piZ.push(lobe(hcn,null,69,0,t*54,64,15,15,PIC,.82,.01));
+  });
+  [1,-1].forEach(t=>{
+    const d=new THREE.Mesh(new THREE.SphereGeometry(4.4,16,12),new THREE.MeshBasicMaterial({color:0x17150f,transparent:true,opacity:0}));
+    d.position.set(51,t*9,15);d.userData={t:0,o:0};hcn.N.add(d);hG.dots.push(d);
+  });
+  hcn.hx=-238;hcn.hxt=-238;hcn.nx=232;hcn.nxt=232;
+  hcn.update=function(){
+    hcn.hx+=(hcn.hxt-hcn.hx)*.06;hcn.nx+=(hcn.nxt-hcn.nx)*.06;
+    hcn.H.position.x=hcn.hx;hcn.N.position.x=hcn.nx;
+    hG.dots.forEach(d=>{const u=d.userData;u.o+=(u.t-u.o)*.12;d.material.opacity=u.o;d.visible=u.o>.02;});
+  };
+  window.hcnSet=function(step){
+    const T=(arr,op,st)=>arr.forEach(m=>{m.userData.t=op;if(st!==undefined)m.userData.st=st;});
+    hcn.hxt=step>=1?-152:-238; // H closes in as C–H σ forms
+    hcn.nxt=step>=2?138:232;    // N closes in as C–N σ forms
+    T(hG.cSp,step>=1?.2:.5);
+    T(hG.nSp,step>=2?.2:.5);
+    T(hG.pY,step>=3?.12:.5);
+    T(hG.pZ,step>=3?.12:.5);
+    T(hG.sigCH,step>=1?.88:0,step>=1?1:.01);
+    T(hG.sigCN,step>=2?.88:0,step>=2?1:.01);
+    T(hG.piY,step>=3?.82:0,step>=3?1:.01);
+    T(hG.piZ,step>=3?.82:0,step>=3?1:.01);
+    hG.nOut.forEach(m=>m.userData.ct.set(step>=4?HYBC:SIGO));
+    hG.dots.forEach(d=>d.userData.t=step>=4?1:0);
+  };
+  window.hcnReset=()=>resetView(hcn);
+  window.hcnPulse=function(q){
+    const arr=q==="ch"?hG.sigCH:q==="cn1"?hG.sigCN:hG.piY.concat(hG.piZ);
+    arr.forEach(m=>{m.userData.st=1.25;setTimeout(()=>{m.userData.st=1;},700);});
+  };
+  window.hcnSet(0);
+
+});
+guard("ovlScene",function(){
+  /* ============ σ/π overlap lab (slide 3) — strength & rotation demo ============ */
+  const ovl=makeStage("ovlScene","s3",20,430);
+  const ovlRefs={sig:[],pi:[],orb:[]};
+  const ovlState={type:"ss",d:210,dt:210,bond:false,demo:null,demoT:0};
+  function ovlBuild(type){
+    clearStage(ovl);
+    axis(ovl,215);
+    ovl.aL=new THREE.Group();ovl.aR=new THREE.Group();ovl.mol.add(ovl.aL,ovl.aR);
+    nuc(ovl,ovl.aL,0,11.5);nuc(ovl,ovl.aR,0,11.5);
+    ovlState.type=type;ovlState.d=215;ovlState.bond=false;ovlState.demo=null;
+    ovlRefs.sig.length=0;ovlRefs.pi.length=0;ovlRefs.orb.length=0;
+    if(type==="ss"){
+      ovlRefs.orb.push(lobe(ovl,ovl.aL,0,0,0,42,42,42,SIGO,.8));
+      ovlRefs.orb.push(lobe(ovl,ovl.aR,0,0,0,42,42,42,SIGO,.8));
+      ovlRefs.sig.push(lobe(ovl,null,0,0,0,72,22,22,SIGC,.88,.01));
+      ovlState.dt=78;
+    }else if(type==="sp"){
+      ovlRefs.orb.push(lobe(ovl,ovl.aL,0,0,0,38,38,38,SIGO,.8));
+      [1,-1].forEach(t=>ovlRefs.orb.push(lobe(ovl,ovl.aR,t*46,0,0,44,16,16,SIGO,.8)));
+      ovlRefs.sig.push(lobe(ovl,null,0,0,0,80,22,22,SIGC,.88,.01));
+      ovlState.dt=95;
+    }else if(type==="pp"){
+      [1,-1].forEach(t=>{
+        ovlRefs.orb.push(lobe(ovl,ovl.aL,t*46,0,0,44,16,16,SIGO,.8));
+        ovlRefs.orb.push(lobe(ovl,ovl.aR,t*46,0,0,44,16,16,SIGO,.8));
+      });
+      ovlRefs.sig.push(lobe(ovl,null,0,0,0,86,22,22,SIGC,.88,.01));
+      ovlState.dt=100;
+    }else{ // pi — σ already present, p orbitals above/below
+      ovlRefs.sig.push(lobe(ovl,null,0,0,0,84,18,18,SIGC,.85));
+      [1,-1].forEach(t=>{
+        ovlRefs.orb.push(lobe(ovl,ovl.aL,0,t*46,0,16,42,16,PIO,.8));
+        ovlRefs.orb.push(lobe(ovl,ovl.aR,0,t*46,0,16,42,16,PIO,.8));
+      });
+      ovlRefs.pi.push(lobe(ovl,null,0,54,0,84,15,15,PIC,.82,.01));
+      ovlRefs.pi.push(lobe(ovl,null,0,-54,0,84,15,15,PIC,.82,.01));
+      ovlState.dt=95;
+    }
+    ovl.update=function(){
+      const S=ovlState;
+      S.d+=(S.dt-S.d)*.06;
+      ovl.aL.position.x=-S.d;ovl.aR.position.x=S.d;
+      if(!S.bond&&Math.abs(S.d-S.dt)<9){
+        S.bond=true;
+        const tgt=S.type==="pi"?ovlRefs.pi:ovlRefs.sig;
+        tgt.forEach(m=>{m.userData.t=m.userData.o0;m.userData.st=1;});
+        if(S.type==="pi")ovlRefs.orb.forEach(m=>m.userData.t=.12); // p orbitals are consumed by the π bond
+      }
+      if(S.demo==="pi"){
+        S.demoT+=1/60;
+        const k=S.demoT<1?S.demoT:(S.demoT<2.1?1:Math.max(0,1-(S.demoT-2.1)));
+        const tw=Math.min(Math.max(k,0),1)*0.62;
+        ovl.aL.rotation.x=tw;ovl.aR.rotation.x=-tw;
+        const kk=Math.min(Math.max(k,0),1);
+        ovlRefs.pi.forEach(m=>m.userData.t=.1+.72*(1-kk));
+        ovlRefs.orb.forEach(m=>m.userData.t=.12+.56*kk); // p orbitals reappear as they twist out of alignment
+        if(S.demoT>3.4){S.demo=null;ovl.aL.rotation.x=0;ovl.aR.rotation.x=0;
+          ovlRefs.pi.forEach(m=>m.userData.t=.82);ovlRefs.orb.forEach(m=>m.userData.t=.12);}
+      }
+    };
+  }
+  window.ovlBuild=ovlBuild;
+  window.ovlDemo=function(kind){
+    if(kind==="sigma"){ovl.spin=true;setTimeout(()=>{ovl.spin=false;},2600);}
+    else{ovlState.demo="pi";ovlState.demoT=0;}
+  };
+  ovlBuild(window.ovlType||"ss");
+
+});
+guard("ordScene",function(){
+  /* ============ bond order (slide 4) — orbitals shown first, bonds form in narrated phases ============ */
+  const ord=makeStage("ordScene","s4",20,430);
+  const PH_LEN=2800; // ms per phase
+  function ordBuild(n){
+    clearStage(ord);
+    axis(ord,215);
+    ord.aL=new THREE.Group();ord.aR=new THREE.Group();ord.mol.add(ord.aL,ord.aR);
+    nuc(ord,ord.aL,0,11.5,n===3?"N":"C");nuc(ord,ord.aR,0,11.5,n===3?"N":"C");
+    const dt=n===1?112:n===2?95:80; // nuclei pull closer as bond order rises
+    const d0=dt+120,L=dt*0.82;
+    const G=ord._g={hybIn:[],spOut:[],pY:[],pZ:[],sig:[],piY:[],piZ:[]};
+    [[ord.aL,1],[ord.aR,-1]].forEach(([g,sg])=>{
+      G.hybIn.push(lobe(ord,g,sg*39,0,0,36,13,13,SIGO,.8));   // inward hybrid, big lobe
+      G.hybIn.push(lobe(ord,g,-sg*14,0,0,11,7,7,SIGO,.7));    // its small back lobe
+      if(n===3){ // outward sp hybrid — will become the lone pair on N
+        G.spOut.push(lobe(ord,g,-sg*47,0,0,44,15,15,SIGO,.8));
+        G.spOut.push(lobe(ord,g,sg*13,0,0,12,8,8,SIGO,.7));
+      }
+      if(n>=2)[1,-1].forEach(t=>G.pY.push(lobe(ord,g,0,t*46,0,15,40,15,PIO,.8)));
+      if(n>=3)[1,-1].forEach(t=>G.pZ.push(lobe(ord,g,0,0,t*46,15,15,40,PIO,.8)));
+    });
+    G.sig.push(lobe(ord,null,0,0,0,L,20,20,SIGC,.88,.01));
+    if(n>=2)[1,-1].forEach(t=>G.piY.push(lobe(ord,null,0,t*54,0,L,16,16,PIC,.82,.01)));
+    if(n>=3)[1,-1].forEach(t=>G.piZ.push(lobe(ord,null,0,0,t*54,L,16,16,PIC,.82,.01)));
+    ord._d=d0;ord._dt=d0;ord._ph=-1;ord._t0=performance.now();
+    const maxPh=n===1?1:n===2?2:3;
+    ord.update=function(){
+      const ph=Math.min(n+1,Math.floor((performance.now()-ord._t0)/PH_LEN)); // extra beat at the end to hold
+      if(ph!==ord._ph){
+        ord._ph=ph;
+        const T=(arr,op,st)=>arr.forEach(m=>{m.userData.t=op;if(st!==undefined)m.userData.st=st;});
+        ord._dt=ph>=1?dt:d0; // nuclei close in as the σ bond forms
+        T(G.hybIn,ph>=1?.15:.8);
+        T(G.sig,ph>=1?.88:0,ph>=1?1:.01);
+        T(G.pY,ph>=2?.12:.8);
+        T(G.piY,ph>=2?.82:0,ph>=2?1:.01);
+        T(G.pZ,ph>=3?.12:.8);
+        T(G.piZ,ph>=3?.82:0,ph>=3?1:.01);
+        G.spOut.forEach(m=>m.userData.ct.set(ph>=maxPh?HYBC:SIGO)); // lone pair turns green at the final step
+        if(typeof window.ordPhase==="function")window.ordPhase(Math.min(ph,maxPh),n);
+      }
+      ord._d+=(ord._dt-ord._d)*.06;
+      ord.aL.position.x=-ord._d;ord.aR.position.x=ord._d;
+    };
+  }
+  window.ordBuild=ordBuild;
+  ordBuild(window.ordN||1);
+
+});
+guard("geoScene",function(){
+  /* ============ hybridisation shapes (slide 5) ============ */
+  const geo=makeStage("geoScene","s5",60,330);
+  const X=new THREE.Vector3(1,0,0);
+  function geoBuild(key){
+    clearStage(geo);
+    ball(geo,null,0,0,0,12);
+    const dirs={sp:[[1,0,0],[-1,0,0]],
+      sp2:[[1,0,0],[-.5,.866,0],[-.5,-.866,0]],
+      sp3:[[1,1,1],[1,-1,-1],[-1,1,-1],[-1,-1,1]]}[key];
+    dirs.forEach(d=>{
+      const v=new THREE.Vector3(d[0],d[1],d[2]).normalize();
+      const l=lobe(geo,null,v.x*42,v.y*42,v.z*42,36,15,15,HYBC,.85);
+      l.quaternion.setFromUnitVectors(X,v);
+      ball(geo,null,v.x*82,v.y*82,v.z*82,8);
+    });
+  }
+  window.geoBuild=geoBuild;
+  geoBuild(window.hybKey||"sp");
+});
+guard("predScene",function(){
+  /* ============ molecule viewer (slide 6) ============ */
+  const pm=makeStage("predScene","s6",80,470);
+  const X=new THREE.Vector3(1,0,0),Y=new THREE.Vector3(0,1,0);
+  const sigMat=new THREE.MeshStandardMaterial({color:SIGC,roughness:.35,metalness:.15});
+  function rod(a,b){
+    const d=new THREE.Vector3().subVectors(b,a),len=d.length();
+    const c=new THREE.Mesh(new THREE.CylinderGeometry(5,5,len,16),sigMat);
+    c.position.copy(a).addScaledVector(d,.5);
+    c.quaternion.setFromUnitVectors(Y,d.clone().normalize());
+    pm.mol.add(c);
+  }
+  const V=(x,y,z)=>new THREE.Vector3(x,y,z);
+  const TET=[[1,1,1],[1,-1,-1],[-1,1,-1],[-1,-1,1]].map(d=>V(...d).normalize());
+  function lp(dir){ // lone-pair lobe along a direction
+    const l=lobe(pm,null,dir.x*44,dir.y*44,dir.z*44,34,16,16,HYBC,.85);
+    l.quaternion.setFromUnitVectors(X,dir);
+  }
+  function predBuild(key){
+    clearStage(pm);
+    if(key==="ch4"){
+      ball(pm,null,0,0,0,12,"C");
+      TET.forEach(d=>{const h=d.clone().multiplyScalar(82);ball(pm,null,h.x,h.y,h.z,8,"H");rod(V(0,0,0),h);});
+    }else if(key==="nh3"){
+      ball(pm,null,0,0,0,12,"N");
+      TET.slice(1).forEach(d=>{const h=d.clone().multiplyScalar(80);ball(pm,null,h.x,h.y,h.z,8,"H");rod(V(0,0,0),h);});
+      lp(TET[0]);
+    }else if(key==="h2o"){
+      ball(pm,null,0,0,0,12,"O");
+      TET.slice(2).forEach(d=>{const h=d.clone().multiplyScalar(78);ball(pm,null,h.x,h.y,h.z,8,"H");rod(V(0,0,0),h);});
+      lp(TET[0]);lp(TET[1]);
+    }else if(key==="co2"){
+      ball(pm,null,0,0,0,11,"C");
+      [-1,1].forEach(s=>{
+        ball(pm,null,s*98,0,0,12,"O");
+        rod(V(0,0,0),V(s*98,0,0));
+        [1,-1].forEach(t=>{ // one π bond per C=O, perpendicular to the other side's
+          if(s<0)lobe(pm,null,s*49,t*40,0,46,14,14,PIC,.82);
+          else lobe(pm,null,s*49,0,t*40,46,14,14,PIC,.82);
+        });
+      });
+    }else{ // c2h4 — planar, sp²: C–H bonds point OUTWARD at 120° to the C–C axis
+      [-1,1].forEach(s=>{
+        ball(pm,null,s*54,0,0,11,"C");
+        [1,-1].forEach(t=>{
+          const h=V(s*54+s*41,t*71,0); // 82 units at ±120° from the inward axis → H–C–H = H–C–C = 120°
+          ball(pm,null,h.x,h.y,h.z,8,"H");
+          rod(V(s*54,0,0),h);
+        });
+      });
+      rod(V(-54,0,0),V(54,0,0));
+      [1,-1].forEach(t=>lobe(pm,null,0,0,t*40,50,15,15,PIC,.82));
+    }
+  }
+  window.predBuild=predBuild;
+  predBuild(window.predKey||"ch4");
+});
+window.__threeReady=true;
 tick();
-}catch(err){
-  const fb=document.getElementById("n2Fallback");
-  if(fb)fb.innerHTML="3D model could not load (the three.js CDN was unreachable).<br>The step buttons and captions above still walk through the bonding.";
-  console.error(err);
-}
 </script>
 </body>
 </html>
