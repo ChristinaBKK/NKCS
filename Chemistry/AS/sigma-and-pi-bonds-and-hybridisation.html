@@ -341,7 +341,7 @@ table.cmp td:first-child{font-weight:600;white-space:nowrap;background:#fbf9f3}
         </div>
         <div class="stage stage3d">
           <div class="scene3d sm" id="ovlScene"><div class="fb3d">Loading 3D model…</div></div>
-          <div class="draghint">⟲ drag to rotate</div>
+          <div class="draghint">⟲ drag to rotate · scroll / pinch to zoom</div>
         </div>
         <p class="stepcap" id="ovlCap"></p>
         <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:8px">
@@ -382,7 +382,7 @@ table.cmp td:first-child{font-weight:600;white-space:nowrap;background:#fbf9f3}
         <div class="stage stage3d">
           <div class="scene3d sm" id="ordScene"><div class="fb3d">Loading 3D model…</div></div>
           <div class="stepovl" id="ordStepOvl"></div>
-          <div class="draghint">⟲ drag to rotate</div>
+          <div class="draghint">⟲ drag to rotate · scroll / pinch to zoom</div>
         </div>
         <div class="legend">
           <span><i style="background:var(--sigma)"></i>σ bond (on axis)</span>
@@ -418,7 +418,7 @@ table.cmp td:first-child{font-weight:600;white-space:nowrap;background:#fbf9f3}
       <div>
         <div id="hybCard"></div>
         <div class="card" style="margin-top:12px;padding:12px 16px">
-          <p style="font-family:var(--font-mono);font-size:11px;font-weight:600;letter-spacing:.12em;margin:0 0 4px;color:var(--ink-soft)">SHAPE AROUND THE ATOM — DRAG TO ROTATE</p>
+          <p style="font-family:var(--font-mono);font-size:11px;font-weight:600;letter-spacing:.12em;margin:0 0 4px;color:var(--ink-soft)">SHAPE AROUND THE ATOM — DRAG TO ROTATE · PINCH TO ZOOM</p>
           <div class="stage stage3d" style="border:none;background:transparent;box-shadow:none">
             <div class="scene3d geo3d" id="geoScene"><div class="fb3d">Loading 3D…</div></div>
           </div>
@@ -452,7 +452,7 @@ table.cmp td:first-child{font-weight:600;white-space:nowrap;background:#fbf9f3}
           </table>
         </div>
         <div class="card" style="margin-top:12px;padding:12px 16px">
-          <p style="font-family:var(--font-mono);font-size:11px;font-weight:600;letter-spacing:.12em;margin:0 0 4px;color:var(--ink-soft)">3D VIEW — <span style="color:var(--sigma)">σ</span> · <span style="color:var(--pi)">π</span> · <span style="color:var(--hybrid)">LONE PAIR</span> — DRAG TO ROTATE</p>
+          <p style="font-family:var(--font-mono);font-size:11px;font-weight:600;letter-spacing:.12em;margin:0 0 4px;color:var(--ink-soft)">3D VIEW — <span style="color:var(--sigma)">σ</span> · <span style="color:var(--pi)">π</span> · <span style="color:var(--hybrid)">LONE PAIR</span> — DRAG · PINCH</p>
           <div class="stage stage3d" style="border:none;background:transparent;box-shadow:none">
             <div class="scene3d mol3d" id="predScene"><div class="fb3d">Loading 3D…</div></div>
           </div>
@@ -476,7 +476,7 @@ table.cmp td:first-child{font-weight:600;white-space:nowrap;background:#fbf9f3}
             <div class="fb3d">Loading 3D model…<br>(needs an internet connection for the 3D library)</div>
           </div>
           <div class="stepovl" id="n2StepOvl"></div>
-          <div class="draghint">⟲ drag to rotate</div>
+          <div class="draghint">⟲ drag to rotate · scroll / pinch to zoom</div>
         </div>
         <div class="legend">
           <span><i style="background:var(--ink)"></i>N nucleus</span>
@@ -508,7 +508,7 @@ table.cmp td:first-child{font-weight:600;white-space:nowrap;background:#fbf9f3}
         <div class="stage stage3d">
           <div class="scene3d" id="hcnScene"><div class="fb3d">Loading 3D model…</div></div>
           <div class="stepovl" id="hcnStepOvl"></div>
-          <div class="draghint">⟲ drag to rotate</div>
+          <div class="draghint">⟲ drag to rotate · scroll / pinch to zoom</div>
         </div>
         <div class="legend">
           <span><i style="background:var(--ink)"></i>nucleus</span>
@@ -760,9 +760,12 @@ document.addEventListener("keydown",e=>{
   else if(e.key==="End")go(slides.length-1);
   else if(e.key==="Escape")openOverview();
 });
-/* touch swipe */
+/* touch swipe — ignore gestures that begin on a 3D stage (or pinches) so rotating/zooming a model never flips the page */
 let tx0=null;
-$("#deck").addEventListener("touchstart",e=>{tx0=e.touches[0].clientX;},{passive:true});
+$("#deck").addEventListener("touchstart",e=>{
+  if(e.touches.length>1||e.target.closest(".scene3d,.stage3d,canvas")){tx0=null;return;}
+  tx0=e.touches[0].clientX;
+},{passive:true});
 $("#deck").addEventListener("touchend",e=>{
   if(tx0===null)return;
   const dx=e.changedTouches[0].clientX-tx0;tx0=null;
@@ -1215,7 +1218,10 @@ function makeStage(wrapId,slideId,camY,camZ){
   const d1=new THREE.DirectionalLight(0xffffff,1.1);d1.position.set(2,3,4);scene.add(d1);
   const d2=new THREE.DirectionalLight(0xfff2e0,.35);d2.position.set(-3,-2,-3);scene.add(d2);
   const controls=new OrbitControls(camera,renderer.domElement);
-  controls.enableZoom=false;controls.enablePan=false;controls.enableDamping=true;
+  controls.enableZoom=true;controls.enablePan=false;controls.enableDamping=true;
+  controls.zoomSpeed=.8;
+  const _d0=Math.hypot(camY,camZ);
+  controls.minDistance=_d0*0.45;controls.maxDistance=_d0*1.8; // zoom range: close-up … wide
   controls.dampingFactor=.08;controls.rotateSpeed=.55;controls.autoRotateSpeed=.8;
   const st={wrap,renderer,scene,camera,cam0:camera.position.clone(),controls,mol:new THREE.Group(),
             clouds:[],slide:document.getElementById(slideId),userGrabbed:false,spin:false,update:null,labels:[]};
